@@ -1,0 +1,55 @@
+{
+  "name": "ledgermitra",
+  "version": "1.0.0",
+  "description": "Modern accounting desktop app with Speed Plus legacy import",
+  "main": "dist/main/main.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "package:win": "electron-builder --win --x64",
+    "merge:legacy": "node scripts/merge-legacy-data.mjs",
+    "postinstall": "node scripts/patch-mdb-reader.mjs && electron-builder install-app-deps",
+    "rebuild:native": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.7.0",
+    "mdb-reader": "^3.2.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "whatsapp-web.js": "^1.34.7"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/better-sqlite3": "^7.6.9",
+    "@types/node": "^20.11.28",
+    "@types/qrcode-terminal": "^0.12.2",
+    "@types/react": "^18.2.64",
+    "@types/react-dom": "^18.2.21",
+    "@vitejs/plugin-react": "^4.2.1",
+    "electron": "^30.0.0",
+    "electron-builder": "^26.8.1",
+    "electron-vite": "^5.0.0",
+    "sql.js": "^1.14.1",
+    "typescript": "^5.4.2",
+    "vite": "^6.0.0"
+  },
+  "build": {
+    "appId": "com.ledgermitra.app",
+    "productName": "LedgerMitra",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "database/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  }
+}
