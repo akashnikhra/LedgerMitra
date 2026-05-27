@@ -96,7 +96,11 @@
     .hero-headline {
       font-size: 38px; font-weight: 700; color: var(--ink);
       line-height: 1.5; margin-bottom: 8px;
+      animation: fadeUp 0.8s ease-out;
     }
+    .hero-sub { animation: fadeUp 0.8s ease-out 0.15s both; }
+    .hero-ctas { animation: fadeUp 0.8s ease-out 0.3s both; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
     .hero-sub {
       color: var(--mute); font-size: 16px;
       max-width: 600px; margin: 0 auto 24px;
@@ -135,7 +139,7 @@
     .footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
     .footer-links a { color: var(--body); font-size: 14px; transition: color 0.2s; cursor: pointer; }
     .footer-links a:hover { color: var(--ink); }
-    .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+    .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
     .fade-in.visible { opacity: 1; transform: translateY(0); }
     .parallax { will-change: transform; }
     .parallax-content { will-change: transform; }
@@ -352,9 +356,9 @@
 
   function onScroll() {
     var sy = window.scrollY;
-    if (heroTui) heroTui.style.transform = 'translateY(' + (sy * 0.06) + 'px)';
-    if (heroContent) heroContent.style.transform = 'translateY(' + (sy * 0.14) + 'px)';
-    if (heroBg) heroBg.style.transform = 'translateY(' + (sy * 0.03) + 'px)';
+    if (heroTui) heroTui.style.transform = 'translateY(' + (sy * 0.10) + 'px)';
+    if (heroContent) heroContent.style.transform = 'translateY(' + (sy * 0.20) + 'px)';
+    if (heroBg) heroBg.style.transform = 'translateY(' + (sy * 0.04) + 'px)';
     ticking = false;
   }
 
