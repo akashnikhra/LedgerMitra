@@ -135,6 +135,11 @@
     .footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
     .footer-links a { color: var(--body); font-size: 14px; transition: color 0.2s; cursor: pointer; }
     .footer-links a:hover { color: var(--ink); }
+    .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+    .parallax { will-change: transform; }
+    .card-hover { transition: border-color 0.3s, transform 0.3s; }
+    .card-hover:hover { border-color: var(--ink); transform: translateY(-2px); }
     .footer-copy { text-align: center; color: var(--mute); font-size: 14px; }
     @media (max-width: 640px) {
       .hero-headline { font-size: 28px; }
@@ -168,7 +173,7 @@
 
   <section class="section" style="padding-top:24px">
     <div class="container">
-      <div class="hero-tui">
+      <div class="hero-tui parallax">
         <div style="font-size:20px; font-weight:700; letter-spacing:4px; color:var(--on-dark); margin-bottom:16px">LEDGERMITRA</div>
         <p style="color:var(--on-dark-mute); font-size:13px; margin-bottom:24px">v1.0.0 — offline accounting for Windows</p>
         <div style="background:var(--surface-dark-elevated); border-radius:4px; padding:12px 16px; text-align:left; font-size:13px; max-width:520px; margin:0 auto">
@@ -191,7 +196,7 @@
     </div>
   </section>
 
-  <section class="section" id="features">
+  <section class="section fade-in" id="features">
     <div class="container">
       <h2 class="section-heading">Features</h2>
 
@@ -227,40 +232,40 @@
     </div>
   </section>
 
-  <section class="section" id="why">
+  <section class="section fade-in" id="why">
     <div class="container">
       <h2 class="section-heading">Why LedgerMitra?</h2>
       <p style="color:var(--mute); text-align:center; margin-bottom:32px; font-size:14px">Modern accounting without the cloud — built for Windows, built for privacy.</p>
       <div style="display:flex; flex-wrap:wrap; gap:16px; justify-content:center">
-        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px">
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">Offline-First</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">All data lives in a local SQLite database. No server, no cloud dependency, no monthly fees. Backup is a file copy.</p>
         </div>
-        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px">
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">Double-Entry Ledger</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">Every invoice, receipt, and payment creates debit/credit entries. Balances are always consistent — no reconciliation surprises.</p>
         </div>
-        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px">
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">GST-Ready</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">CGST + SGST (intra-state) and IGST (inter-state) with configurable rates per product. Auto-calculated on every invoice.</p>
         </div>
-        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px">
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">Invoice Aging</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">Outstanding amounts tracked per invoice with aging buckets for follow-up. Know exactly who owes what and since when.</p>
         </div>
-        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px">
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">Balance Carry-Forward</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">Customer opening balances flow across financial years with full audit trail via <code style="background:var(--surface-soft); padding:1px 4px; font-family:var(--font); font-size:12px">fy_carry_forwards</code>.</p>
         </div>
-        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px">
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">Stock Tracking</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">Product stock updated on invoice/purchase creation. Reorder level alerts on dashboard — never run out of tracked items.</p>
         </div>
-        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px">
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">Auto-Numbering</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">Invoice and receipt numbers auto-generated per financial year. No gaps, no duplicates, no manual entry.</p>
         </div>
-        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px">
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">Payment Allocation</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">Receipts can be auto-allocated against oldest outstanding invoices or assigned manually — flexible to your workflow.</p>
         </div>
@@ -268,7 +273,7 @@
     </div>
   </section>
 
-  <section class="section" id="migration">
+  <section class="section fade-in" id="migration">
     <div class="container">
       <h2 class="section-heading">Migration from Speed Plus</h2>
       <p style="color:var(--mute); margin-bottom:24px">
@@ -294,7 +299,7 @@
     </div>
   </section>
 
-  <section class="section" id="quickstart">
+  <section class="section fade-in" id="quickstart">
     <div class="container">
       <h2 class="section-heading">Quick Start</h2>
 
@@ -328,5 +333,28 @@
       <p class="footer-copy">© 2026 LedgerMitra — Built with Electron + React + SQLite</p>
     </div>
   </footer>
+
+<script>
+;(function() {
+  var sections = document.querySelectorAll('.fade-in');
+  var hero = document.querySelector('.parallax');
+  var ticking = false;
+
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  sections.forEach(function(s) { observer.observe(s); });
+
+  function onScroll() {
+    var sy = window.scrollY;
+    if (hero) hero.style.transform = 'translateY(' + (sy * 0.08) + 'px)';
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', function() {
+    if (!ticking) { requestAnimationFrame(onScroll); ticking = true; }
+  });
+})();
+</script>
 </body>
 </html>
