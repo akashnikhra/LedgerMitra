@@ -1,0 +1,42 @@
+<h2>Choose a landing page approach</h2>
+<p class="subtitle">All three use the DESIGN.md color system (cream canvas, ink text, Berkeley Mono).</p>
+
+<div class="options">
+  <div class="option" data-choice="terminal" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Full Terminal Theme</h3>
+      <p>Follow DESIGN.md exactly. Hero shows a dark TUI mockup — a faux terminal showing accounting commands (<code>sales:list</code>, <code>gst:compute</code>, <code>ledger:balance</code>). ASCII bracket markers for features. Everything monospaced. The landing page reads like a manpage for an accounting CLI tool.</p>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>Pros</h4><ul><li>Strongest brand identity</li><li>Matches existing DESIGN.md perfectly</li><li>Unique in accounting software space</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Less approachable for non-technical users</li><li>No screenshots of the actual app</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="readme" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>README / Manpage Style</h3>
+      <p>Hero is a centered README-style block with an ASCII-art wordmark. Clean text layout with section headers using bracketed labels (<code>[+]</code>, <code>[*]</code>). No dark TUI mockup — the hero is a large monospaced headline on the cream canvas. More minimal, more approachable, less dramatic.</p>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>Pros</h4><ul><li>Cleanest, most minimal design</li><li>Fastest to implement</li><li>Approachable for all audiences</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Less visually striking</li><li>Dark hero section is a key brand element in DESIGN.md</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="hybrid" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Terminal + App Screenshots (Recommended)</h3>
+      <p>Terminal-themed hero with dark TUI mockup (matching DESIGN.md). Features section uses actual app screenshots the user already captured — each framed in a thin hairline border with bracketed labels. Brings the credibility of real product screenshots while keeping the terminal aesthetic. Best of both worlds.</p>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>Pros</h4><ul><li>Strong brand + product credibility</li><li>Uses existing screenshots</li><li>Most effective for driving downloads</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Slightly more HTML to build</li><li>Need to maintain screenshot quality</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top:24px">Open <strong>http://localhost:52341</strong> and click your preferred approach.</p>

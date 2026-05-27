@@ -241,6 +241,13 @@ export async function initializeDatabase(dbPath?: string): Promise<void> {
   }
 }
 
+export function closeDatabase(): void {
+  if (db) {
+    db.close();
+    db = null;
+  }
+}
+
 export function getDatabase(): Database.Database {
   if (!db) throw new Error('Database not initialized');
   return db;

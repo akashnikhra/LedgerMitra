@@ -1,0 +1,69 @@
+<h2>Section 1: Hero — does this layout feel right?</h2>
+<p class="subtitle">The hero is the dark TUI mockup + tagline + CTA. Keeping the exact same structure as the DESIGN.md's OpenCode hero, but for LedgerMitra.</p>
+
+<div class="section">
+  <h3>Layout structure (top to bottom)</h3>
+
+  <div class="mockup">
+    <div class="mockup-body">
+      <div style="background:#201d1d; padding:32px 24px; border-radius:0; text-align:center; margin-bottom:16px">
+        <pre style="color:#fdfcfc; font-family:'Berkeley Mono',monospace; font-size:20px; font-weight:700; letter-spacing:4px; margin:0">
+┌─┐┬  ┌─┐┬ ┬┌─┐┌┬┐┌─┐┌┬┐┬┌─┐┌┐┌
+│  │  ├┤ │││└─┐ ││├─┤ │ ││ ││││
+└─┘┴─┘└─┘└┴┘└─┘─┴┘┴ ┴ ┴ ┴└─┘┘└┘
+        </pre>
+        <p style="color:#9a9898; font-family:monospace; font-size:13px; margin:16px 0 24px">
+          v1.0.0 &mdash; offline accounting for Windows
+        </p>
+        <div style="background:#302c2c; border-radius:4px; padding:8px 12px; display:inline-flex; gap:8px; align-items:center; text-align:left">
+          <span style="color:#9a9898; font-family:monospace">$</span>
+          <span style="color:#fdfcfc; font-family:monospace"> ledger mitra </span>
+          <span style="color:#007aff; font-family:monospace">install</span>
+        </div>
+        <div style="margin-top:8px; color:#646262; font-family:monospace; font-size:12px">
+          tab switch  &middot;  ctrl-p commands  &middot;  esc back
+        </div>
+      </div>
+
+      <p style="font-size:24px; font-weight:700; text-align:center; margin:8px 0">
+        Offline desktop accounting.
+      </p>
+      <p style="color:#646262; text-align:center; font-size:15px; margin:0 0 16px">
+        LedgerMitra replaces Speed Plus legacy accounting software. All data stays on your machine.
+      </p>
+
+      <div style="display:flex; gap:8px; justify-content:center; margin-bottom:12px">
+        <div style="background:#201d1d; color:#fdfcfc; border-radius:4px; padding:4px 20px; display:flex; align-items:center; height:36px; font-family:monospace; font-size:14px; cursor:default">
+          Download for Windows &darr;
+        </div>
+        <div style="border:1px solid #646262; border-radius:4px; padding:4px 20px; display:flex; align-items:center; height:36px; font-family:monospace; font-size:14px; cursor:default">
+          View on GitHub &rarr;
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Key questions</h3>
+  <div class="options" data-multiselect>
+    <div class="option" data-choice="ascii-yes" onclick="toggleSelect(this)">
+      <div class="letter">Y</div>
+      <div class="content"><h3>Keep ASCII wordmark</h3><p>Use block-pixel ASCII for the LedgerMitra logo, matching DESIGN.md's approach.</p></div>
+    </div>
+    <div class="option" data-choice="ascii-no" onclick="toggleSelect(this)">
+      <div class="letter">N</div>
+      <div class="content"><h3>Plain text logo</h3><p>Just use "LedgerMitra" as bold text, no ASCII art. Cleaner.</p></div>
+    </div>
+    <div class="option" data-choice="install-show" onclick="toggleSelect(this)">
+      <div class="letter">S</div>
+      <div class="content"><h3>Show install command</h3><p>Include a curl/npm install command inside the TUI mockup (like OpenCode site).</p></div>
+    </div>
+    <div class="option" data-choice="tagline-code" onclick="toggleSelect(this)">
+      <div class="letter">T</div>
+      <div class="content"><h3>Tagline as code comment</h3><p>Write taglines like <code># Offline accounting. No cloud. No fees.</code> inside the TUI</p></div>
+    </div>
+  </div>
+</div>
+
+<p>Open <strong>http://localhost:52341</strong> and select your preferences. Then tell me what you think in the terminal.</p>

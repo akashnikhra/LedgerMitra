@@ -40,7 +40,7 @@ import {
   importFromMergedDb,
   MergedDbInfo
 } from './mdb-import';
-import { getDatabasePath } from './database';
+import { getDatabasePath, closeDatabase, initializeDatabase } from './database';
 import { copyFileSync, existsSync } from 'fs';
 
 export function setupIpcHandlers(_win: BrowserWindow | null): void {
@@ -335,13 +335,19 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
     if (!existsSync(backupPath)) return { success: false, error: 'Backup file not found' };
     try {
       const dbPath = getDatabasePath();
+      // Close existing database connection before overwriting the file
+      closeDatabase();
       // Create a backup of current database before overwriting
       const currentBackup = `${dbPath}.pre-restore-${Date.now()}.bak`;
-      copyFileSync(dbPath, currentBackup);
+      if (existsSync(dbPath)) copyFileSync(dbPath, currentBackup);
       // Copy backup to database path
       copyFileSync(backupPath, dbPath);
+      // Re-initialize database connection from the restored file
+      await initializeDatabase(dbPath);
       return { success: true, path: dbPath, requiresRestart: true };
     } catch (e) {
+      // Try to recover database connection on failure
+      try { await initializeDatabase(); } catch (_) { /* best effort */ }
       return { success: false, error: (e as Error).message };
     }
   });
