@@ -56,6 +56,12 @@
       border: none; cursor: pointer; transition: background 0.2s;
     }
     .btn-dark:hover { background: var(--ink-deep); }
+    .section-heading {
+      font-size: 12px; font-weight: 500; color: var(--stone);
+      letter-spacing: 2px; text-transform: uppercase;
+      margin-bottom: 24px; user-select: none;
+    }
+    .section-heading::before { content: "> "; color: var(--ash); }
     .btn-outline {
       display: inline-flex; align-items: center; height: 36px; padding: 4px 20px;
       background: transparent; color: var(--ink); border: 1px solid var(--hairline-strong);
@@ -109,6 +115,7 @@
       <div style="font-weight:700; font-size:14px; letter-spacing:2px; color:var(--ink)">LEDGERMITRA</div>
       <div class="nav-links">
         <a href="#features">Features</a>
+        <a href="#quickstart">Quick Start</a>
         <a href="#download">Download</a>
         <a href="https://github.com/akashnikhra/LedgerMitra" style="display:inline-flex; align-items:center; gap:6px; height:36px; padding:4px 20px; background:var(--ink); color:var(--on-dark); border-radius:4px; font-family:var(--font-mono); font-size:14px; font-weight:500; text-decoration:none; transition:background 0.2s" onmouseover="this.style.background='var(--ink-deep)'" onmouseout="this.style.background='var(--ink)'">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -132,10 +139,8 @@
         <p style="color:var(--on-dark-mute); font-size:13px; margin:16px 0 24px">v1.0.0 — offline accounting for Windows</p>
         <div style="display:inline-flex; align-items:center; gap:8px; background:var(--surface-dark-elevated); border-radius:4px; padding:8px 16px; font-size:14px">
           <span style="color:var(--on-dark-mute)">$</span>
-          <span style="color:var(--on-dark)">ledger mitra</span>
-          <span style="color:var(--accent)">install</span>
+          <span style="color:var(--on-dark)">install.bat</span>
         </div>
-        <p style="color:var(--mute); font-size:11px; margin-top:8px">tab switch  ·  ctrl-p commands  ·  esc back</p>
       </div>
 
       <div style="text-align:center; margin-top:32px">
@@ -153,7 +158,7 @@
 
   <section class="section" id="features">
     <div class="container">
-      <h2 style="font-size:16px; font-weight:700; color:var(--ink); margin-bottom:32px">[+] Features</h2>
+      <h2 class="section-heading">Features</h2>
 
       <div class="feature-row"><strong>[+] Invoicing</strong> — Create GST-ready sales invoices with line items, auto-numbering, and CGST/SGST/IGST support.</div>
 
@@ -201,9 +206,20 @@
     </div>
   </section>
 
+  <section class="section" id="quickstart">
+    <div class="container">
+      <h2 class="section-heading">Quick Start</h2>
+      <div class="feature-row"><strong>1. Clone</strong> — <code style="background:var(--surface-card); padding:2px 8px; border-radius:2px">git clone https://github.com/akashnikhra/LedgerMitra.git</code></div>
+      <div class="feature-row"><strong>2. Install</strong> — <code style="background:var(--surface-card); padding:2px 8px; border-radius:2px">cd LedgerMitra &amp;&amp; install.bat</code></div>
+      <div class="feature-row"><strong>3. Launch</strong> — <code style="background:var(--surface-card); padding:2px 8px; border-radius:2px">start.bat</code></div>
+      <p style="color:var(--mute); font-size:13px; margin-top:16px">Default login: <code style="background:var(--surface-card); padding:2px 6px; border-radius:2px">admin</code> / <code style="background:var(--surface-card); padding:2px 6px; border-radius:2px">admin123</code></p>
+    </div>
+  </section>
+
   <section class="section" id="download">
     <div class="container" style="text-align:center">
-      <h2 style="font-size:24px; font-weight:700; color:var(--ink); margin-bottom:8px">Download LedgerMitra</h2>
+      <h2 class="section-heading">Download</h2>
+      <p style="font-size:24px; font-weight:700; color:var(--ink); margin-bottom:8px">Get LedgerMitra</p>
       <p style="color:var(--mute); margin-bottom:24px">Free. Offline. Your data stays on your machine.</p>
 
       <div style="display:inline-flex; align-items:center; gap:8px; background:var(--surface-card); border-radius:4px; padding:12px 16px; font-family:var(--font-mono); font-size:14px; margin-bottom:24px">
