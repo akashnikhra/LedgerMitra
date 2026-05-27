@@ -1,239 +1,291 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LedgerMitra — Offline Desktop Accounting</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { DEFAULT: '#F59E0B', light: '#FBBF24' },
+            cta: { DEFAULT: '#8B5CF6', hover: '#7C3AED' },
+            surface: { DEFAULT: '#0F172A', elevated: '#1E293B', card: '#1E293B' },
+            ink: { DEFAULT: '#F8FAFC', mute: '#94A3B8' },
+          },
+          fontFamily: {
+            sans: ['IBM Plex Sans', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
   <style>
-    :root {
-      --ink: #201d1d;
-      --ink-deep: #0f0000;
-      --charcoal: #302c2c;
-      --body: #424245;
-      --mute: #646262;
-      --stone: #6e6e73;
-      --ash: #9a9898;
-      --canvas: #fdfcfc;
-      --surface-soft: #f8f7f7;
-      --surface-card: #f1eeee;
-      --surface-dark: #201d1d;
-      --surface-dark-elevated: #302c2c;
-      --hairline: rgba(15, 0, 0, 0.12);
-      --hairline-strong: #646262;
-      --on-dark: #fdfcfc;
-      --on-dark-mute: #9a9898;
-      --accent: #007aff;
-      --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: var(--font-mono);
-      background: var(--canvas);
-      color: var(--body);
-      font-size: 16px;
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-    }
-    a { color: inherit; text-decoration: none; }
-    img { max-width: 100%; display: block; }
-    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
-    pre { font-family: var(--font-mono); }
-
-    .nav { position: sticky; top: 0; z-index: 10; background: var(--canvas); border-bottom: 1px solid var(--hairline); }
-    .nav .container { display: flex; align-items: center; justify-content: space-between; height: 56px; }
-    .nav-links { display: flex; gap: 24px; align-items: center; }
-    .nav-links a { color: var(--body); font-size: 14px; transition: color 0.2s; cursor: pointer; }
-    .nav-links a:hover { color: var(--ink); }
-
-    .btn-dark {
-      display: inline-flex; align-items: center; height: 36px; padding: 4px 20px;
-      background: var(--ink); color: var(--on-dark); border-radius: 4px;
-      font-family: var(--font-mono); font-size: 14px; font-weight: 500;
-      border: none; cursor: pointer; transition: background 0.2s;
-    }
-    .btn-dark:hover { background: var(--ink-deep); }
-    .section-heading {
-      font-size: 12px; font-weight: 500; color: var(--stone);
-      letter-spacing: 2px; text-transform: uppercase;
-      margin-bottom: 24px; user-select: none;
-    }
-    .section-heading::before { content: "> "; color: var(--ash); }
-    .btn-outline {
-      display: inline-flex; align-items: center; height: 36px; padding: 4px 20px;
-      background: transparent; color: var(--ink); border: 1px solid var(--hairline-strong);
-      border-radius: 4px; font-family: var(--font-mono); font-size: 14px; font-weight: 500;
-      cursor: pointer; transition: background 0.2s;
-    }
-    .btn-outline:hover { background: var(--surface-soft); }
-
-    .section { padding: 96px 0; }
-    .section + .section { border-top: 1px solid var(--hairline); }
-
-    .feature-row {
-      padding: 12px 0;
-      border-top: 1px solid var(--hairline);
-      font-size: 15px;
-    }
-    .feature-row:first-child { border-top: none; }
-    .feature-row strong { color: var(--ink); }
-    .screenshot-pill {
-      background: var(--surface-card); border-radius: 4px;
-      padding: 16px; margin: 16px 0; text-align: center;
-    }
-    .screenshot-pill img { border-radius: 2px; margin: 0 auto; }
-
-    .footer { padding: 32px 0; border-top: 1px solid var(--hairline); }
-    .footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
-    .footer-links a { color: var(--body); font-size: 13px; transition: color 0.2s; cursor: pointer; }
-    .footer-links a:hover { color: var(--ink); }
-    .footer-copy { text-align: center; color: var(--mute); font-size: 12px; }
-
-    .ascii-wordmark {
-      font-family: var(--font-mono); font-size: 20px; font-weight: 700;
-      letter-spacing: 4px; line-height: 1.2; color: var(--on-dark);
-      white-space: pre; text-align: center;
-    }
-
-    @media (max-width: 768px) {
-      .nav .container { flex-direction: column; height: auto; padding: 12px 24px; gap: 8px; }
-      .section { padding: 48px 0; }
-    }
-    @media (max-width: 640px) {
-      .nav-links { gap: 12px; }
-      .btn-dark, .btn-outline { width: 100%; justify-content: center; }
+    * { scrollbar-width: thin; scrollbar-color: #334155 #0F172A; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0F172A; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     }
   </style>
 </head>
-<body>
+<body class="bg-surface text-ink font-sans antialiased selection:bg-brand/30">
 
-  <nav class="nav">
-    <div class="container">
-      <div style="font-weight:700; font-size:14px; letter-spacing:2px; color:var(--ink)">LEDGERMITRA</div>
-      <div class="nav-links">
-        <a href="#features">Features</a>
-        <a href="#quickstart">Quick Start</a>
-        <a href="#download">Download</a>
-        <a href="https://github.com/akashnikhra/LedgerMitra" style="display:inline-flex; align-items:center; gap:6px; height:36px; padding:4px 20px; background:var(--ink); color:var(--on-dark); border-radius:4px; font-family:var(--font-mono); font-size:14px; font-weight:500; text-decoration:none; transition:background 0.2s" onmouseover="this.style.background='var(--ink-deep)'" onmouseout="this.style.background='var(--ink)'">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 0C3.58 0 0 3.58 0 8C0 11.54 2.29 14.53 5.47 15.59C5.87 15.66 6.02 15.42 6.02 15.21C6.02 15.02 6.01 14.39 6.01 13.72C4 14.09 3.48 13.23 3.32 12.78C3.23 12.55 2.84 11.84 2.5 11.65C2.22 11.5 1.82 11.13 2.49 11.12C3.12 11.11 3.57 11.7 3.72 11.94C4.44 13.15 5.59 12.81 6.05 12.6C6.12 12.08 6.33 11.73 6.56 11.53C4.78 11.33 2.92 10.64 2.92 7.58C2.92 6.71 3.23 5.99 3.74 5.43C3.66 5.23 3.38 4.41 3.82 3.31C3.82 3.31 4.49 3.1 6.02 4.13C6.66 3.95 7.34 3.86 8.02 3.86C8.7 3.86 9.38 3.95 10.02 4.13C11.55 3.09 12.22 3.31 12.22 3.31C12.66 4.41 12.38 5.23 12.3 5.43C12.81 5.99 13.12 6.7 13.12 7.58C13.12 10.65 11.25 11.33 9.47 11.53C9.76 11.78 10.01 12.26 10.01 13.01C10.01 14.08 10 14.94 10 15.21C10 15.42 10.15 15.67 10.55 15.59C13.71 14.53 16 11.53 16 8C16 3.58 12.42 0 8 0Z" fill="currentColor"/>
-          </svg>
+  <!-- Nav -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-lg border-b border-white/5">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+      <span class="font-mono font-bold text-sm tracking-[2px] text-ink">LEDGERMITRA</span>
+      <div class="flex items-center gap-5">
+        <a href="#features" class="text-sm text-ink-mute hover:text-ink transition-colors duration-200 hidden sm:block cursor-pointer">Features</a>
+        <a href="#quickstart" class="text-sm text-ink-mute hover:text-ink transition-colors duration-200 hidden sm:block cursor-pointer">Quick Start</a>
+        <a href="#download" class="text-sm text-ink-mute hover:text-ink transition-colors duration-200 hidden sm:block cursor-pointer">Download</a>
+        <a href="https://github.com/akashnikhra/LedgerMitra"
+           class="inline-flex items-center gap-2 h-9 px-4 bg-ink/10 hover:bg-ink/20 text-ink text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
           GitHub
         </a>
-        <button class="btn-dark" onclick="document.getElementById('download').scrollIntoView({behavior:'smooth'})">Download ↓</button>
       </div>
     </div>
   </nav>
 
-  <section class="section" style="padding-top:48px">
-    <div class="container">
-      <div style="background:var(--surface-dark); padding:48px 24px; text-align:center; border-radius:0">
-        <pre class="ascii-wordmark">
+  <!-- Hero -->
+  <section class="min-h-screen flex flex-col justify-center pt-14">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
+      <div class="bg-surface-elevated rounded-2xl border border-white/5 p-8 sm:p-12 text-center">
+        <pre class="font-mono text-lg sm:text-xl font-bold tracking-[4px] leading-relaxed text-ink select-none">
 ┌─┐┬  ┌─┐┬ ┬┌─┐┌┬┐┌─┐┌┬┐┬┌─┐┌┐┌
 │  │  ├┤ │││└─┐ ││├─┤ │ ││ ││││
 └─┘┴─┘└─┘└┴┘└─┘─┴┘┴ ┴ ┴ ┴└─┘┘└┘
         </pre>
-        <p style="color:var(--on-dark-mute); font-size:13px; margin:16px 0 24px">v1.0.0 — offline accounting for Windows</p>
-        <div style="display:inline-flex; align-items:center; gap:8px; background:var(--surface-dark-elevated); border-radius:4px; padding:8px 16px; font-size:14px">
-          <span style="color:var(--on-dark-mute)">$</span>
-          <span style="color:var(--on-dark)">install.bat</span>
+        <p class="text-ink-mute text-sm mt-4 mb-6">v1.0.0 — offline accounting for Windows</p>
+        <div class="inline-flex items-center gap-2 bg-surface rounded-lg px-4 py-2.5 text-sm font-mono">
+          <span class="text-ink-mute">$</span>
+          <span class="text-ink">install.bat</span>
         </div>
       </div>
 
-      <div style="text-align:center; margin-top:32px">
-        <h1 style="font-size:24px; font-weight:700; color:var(--ink); margin-bottom:8px">Offline desktop accounting.</h1>
-        <p style="color:var(--mute); font-size:15px; max-width:600px; margin:0 auto 24px">
+      <div class="text-center mt-12 max-w-2xl mx-auto">
+        <h1 class="text-3xl sm:text-4xl font-bold text-ink leading-tight">Offline desktop accounting.<br><span class="text-brand">Your data, your machine.</span></h1>
+        <p class="text-ink-mute text-base sm:text-lg mt-4 leading-relaxed">
           LedgerMitra replaces Speed Plus legacy accounting software. All data stays on your machine — no cloud, no subscriptions.
         </p>
-        <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap">
-          <button class="btn-dark" onclick="document.getElementById('download').scrollIntoView({behavior:'smooth'})">Download for Windows ↓</button>
-          <a class="btn-outline" href="https://github.com/akashnikhra/LedgerMitra">View on GitHub →</a>
+        <div class="flex flex-wrap justify-center gap-3 mt-8">
+          <a href="#download" class="inline-flex items-center h-11 px-6 bg-brand text-surface font-semibold text-sm rounded-xl hover:bg-brand-light transition-colors duration-200 cursor-pointer shadow-lg shadow-brand/25">
+            Download for Windows ↓
+          </a>
+          <a href="https://github.com/akashnikhra/LedgerMitra" class="inline-flex items-center h-11 px-6 border border-white/10 text-ink text-sm font-medium rounded-xl hover:bg-white/5 transition-colors duration-200 cursor-pointer">
+            View on GitHub →
+          </a>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="section" id="features">
-    <div class="container">
-      <h2 class="section-heading">Features</h2>
+  <!-- Features -->
+  <section id="features" class="py-24 border-t border-white/5">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="font-mono text-xs tracking-[2px] text-ink-mute uppercase">&gt; Features</span>
 
-      <div class="feature-row"><strong>[+] Invoicing</strong> — Create GST-ready sales invoices with line items, auto-numbering, and CGST/SGST/IGST support.</div>
-
-      <div class="screenshot-pill">
-        <img src="assets/invoice-form.png" alt="Invoice Form" style="width:100%; max-width:720px">
+      <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-5 hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <span class="text-brand font-mono text-xs">[+]</span>
+          <h3 class="text-ink font-semibold mt-2">Invoicing</h3>
+          <p class="text-ink-mute text-sm mt-1.5 leading-relaxed">Create GST-ready sales invoices with line items, auto-numbering, and CGST/SGST/IGST support.</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-5 hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <span class="text-brand font-mono text-xs">[+]</span>
+          <h3 class="text-ink font-semibold mt-2">Dashboard</h3>
+          <p class="text-ink-mute text-sm mt-1.5 leading-relaxed">KPI cards, monthly revenue trends, top debtors, invoice aging, and low stock alerts — all at a glance.</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-5 hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <span class="text-brand font-mono text-xs">[+]</span>
+          <h3 class="text-ink font-semibold mt-2">Purchase Invoices</h3>
+          <p class="text-ink-mute text-sm mt-1.5 leading-relaxed">Record purchases with stock updates and ledger integration. Full GST support.</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-5 hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <span class="text-brand font-mono text-xs">[+]</span>
+          <h3 class="text-ink font-semibold mt-2">Receipts</h3>
+          <p class="text-ink-mute text-sm mt-1.5 leading-relaxed">Receive payments with auto-allocation to oldest outstanding invoices or manual per-invoice assignment.</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-5 hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <span class="text-brand font-mono text-xs">[+]</span>
+          <h3 class="text-ink font-semibold mt-2">Ledger</h3>
+          <p class="text-ink-mute text-sm mt-1.5 leading-relaxed">Customer-wise and year-wise ledger with debit/credit columns, running balance, and date range filters.</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-5 hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <span class="text-brand font-mono text-xs">[+]</span>
+          <h3 class="text-ink font-semibold mt-2">Products & Stock</h3>
+          <p class="text-ink-mute text-sm mt-1.5 leading-relaxed">SKU-based product catalog with rates, GST, HSN codes, stock tracking, and reorder alerts.</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-5 hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <span class="text-brand font-mono text-xs">[+]</span>
+          <h3 class="text-ink font-semibold mt-2">Customers & Suppliers</h3>
+          <p class="text-ink-mute text-sm mt-1.5 leading-relaxed">Party master management with opening balances, GSTIN, state, and full transaction history.</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-5 hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <span class="text-brand font-mono text-xs">[+]</span>
+          <h3 class="text-ink font-semibold mt-2">Legacy Import</h3>
+          <p class="text-ink-mute text-sm mt-1.5 leading-relaxed">Full migration engine from Speed Plus MDB/BMW files. Multi-FY detection, deduplication, audit logging.</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-5 hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <span class="text-brand font-mono text-xs">[*]</span>
+          <h3 class="text-ink font-semibold mt-2">Private & Offline</h3>
+          <p class="text-ink-mute text-sm mt-1.5 leading-relaxed">Your financial data never leaves your machine. Single SQLite file. Backup by copying it.</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-5 hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <span class="text-brand font-mono text-xs">[+]</span>
+          <h3 class="text-ink font-semibold mt-2">WhatsApp Integration</h3>
+          <p class="text-ink-mute text-sm mt-1.5 leading-relaxed">Send invoice and receipt PDFs directly via WhatsApp Web with customizable message templates.</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-5 hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <span class="text-brand font-mono text-xs">[+]</span>
+          <h3 class="text-ink font-semibold mt-2">Print & PDF</h3>
+          <p class="text-ink-mute text-sm mt-1.5 leading-relaxed">Invoice, receipt, and ledger printing with save-to-PDF. Built-in print API.</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-5 hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <span class="text-brand font-mono text-xs">[+]</span>
+          <h3 class="text-ink font-semibold mt-2">Backup & Restore</h3>
+          <p class="text-ink-mute text-sm mt-1.5 leading-relaxed">One-click database export and import. Your data is a single SQLite file.</p>
+        </div>
       </div>
 
-      <div class="feature-row"><strong>[+] Dashboard</strong> — KPI cards, monthly revenue trends, top debtors, invoice aging, and low stock alerts — all at a glance.</div>
-
-      <div class="screenshot-pill">
-        <img src="assets/dashboard-light.png" alt="Dashboard" style="width:100%; max-width:720px">
-      </div>
-
-      <div class="feature-row"><strong>[+] Purchase Invoices</strong> — Record purchases with stock updates and ledger integration. Full GST support.</div>
-
-      <div class="feature-row"><strong>[+] Receipts</strong> — Receive payments with auto-allocation to oldest outstanding invoices or manual per-invoice assignment.</div>
-
-      <div class="screenshot-pill">
-        <img src="assets/receipt.png" alt="Receipt Entry" style="width:100%; max-width:720px">
-      </div>
-
-      <div class="feature-row"><strong>[+] Ledger</strong> — Customer-wise and year-wise ledger with debit/credit columns, running balance, and date range filters.</div>
-
-      <div class="screenshot-pill">
-        <img src="assets/ledger.png" alt="Ledger View" style="width:100%; max-width:720px">
-      </div>
-
-      <div class="feature-row"><strong>[+] Products & Stock</strong> — SKU-based product catalog with rates, GST, HSN codes, stock tracking, and reorder alerts.</div>
-
-      <div class="feature-row"><strong>[+] Customers & Suppliers</strong> — Party master management with opening balances, GSTIN, state, and full transaction history.</div>
-
-      <div class="feature-row"><strong>[+] Legacy Import</strong> — Full migration engine from Speed Plus MDB/BMW files. Multi-FY detection, deduplication, audit logging.</div>
-
-      <div class="screenshot-pill">
-        <img src="assets/legacy-import.png" alt="Legacy Import" style="width:100%; max-width:720px">
-      </div>
-
-      <div class="feature-row"><strong>[*] Private & Offline</strong> — Your financial data never leaves your machine. Single SQLite file. Backup by copying it.</div>
-
-      <div class="feature-row"><strong>[+] WhatsApp Integration</strong> — Send invoice and receipt PDFs directly via WhatsApp Web with customizable message templates.</div>
-
-      <div class="screenshot-pill">
-        <img src="assets/whatsapp.png" alt="WhatsApp Send" style="width:100%; max-width:720px">
+      <!-- Screenshots grid -->
+      <div class="mt-16 grid gap-8 sm:grid-cols-2">
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-4">
+          <img src="assets/invoice-form.png" alt="Invoice Form" class="w-full rounded-lg" loading="lazy">
+          <p class="text-ink-mute text-xs mt-3 font-mono">Invoice Form — line-item entry with GST auto-calculation</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-4">
+          <img src="assets/dashboard-light.png" alt="Dashboard" class="w-full rounded-lg" loading="lazy">
+          <p class="text-ink-mute text-xs mt-3 font-mono">Dashboard — KPI cards, revenue chart, top debtors</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-4">
+          <img src="assets/receipt.png" alt="Receipt Entry" class="w-full rounded-lg" loading="lazy">
+          <p class="text-ink-mute text-xs mt-3 font-mono">Receipt Entry — auto-allocation to outstanding invoices</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-4">
+          <img src="assets/ledger.png" alt="Ledger View" class="w-full rounded-lg" loading="lazy">
+          <p class="text-ink-mute text-xs mt-3 font-mono">Ledger View — debit/credit columns, running balance</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-4">
+          <img src="assets/legacy-import.png" alt="Legacy Import" class="w-full rounded-lg" loading="lazy">
+          <p class="text-ink-mute text-xs mt-3 font-mono">Legacy Import — Speed Plus MDB analyzer</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-4">
+          <img src="assets/whatsapp.png" alt="WhatsApp Integration" class="w-full rounded-lg" loading="lazy">
+          <p class="text-ink-mute text-xs mt-3 font-mono">WhatsApp — send invoices via WhatsApp Web</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="section" id="quickstart">
-    <div class="container">
-      <h2 class="section-heading">Quick Start</h2>
-      <div class="feature-row"><strong>1. Clone</strong> — <code style="background:var(--surface-card); padding:2px 8px; border-radius:2px">git clone https://github.com/akashnikhra/LedgerMitra.git</code></div>
-      <div class="feature-row"><strong>2. Install</strong> — <code style="background:var(--surface-card); padding:2px 8px; border-radius:2px">cd LedgerMitra &amp;&amp; install.bat</code></div>
-      <div class="feature-row"><strong>3. Launch</strong> — <code style="background:var(--surface-card); padding:2px 8px; border-radius:2px">start.bat</code></div>
-      <p style="color:var(--mute); font-size:13px; margin-top:16px">Default login: <code style="background:var(--surface-card); padding:2px 6px; border-radius:2px">admin</code> / <code style="background:var(--surface-card); padding:2px 6px; border-radius:2px">admin123</code></p>
+  <!-- Quick Start -->
+  <section id="quickstart" class="py-24 border-t border-white/5">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="font-mono text-xs tracking-[2px] text-ink-mute uppercase">&gt; Quick Start</span>
+
+      <div class="mt-10 space-y-4">
+        <div class="flex items-start gap-4 bg-surface-elevated rounded-xl border border-white/5 p-5 hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-brand/20 text-brand font-mono text-sm flex items-center justify-center font-bold">1</span>
+          <div>
+            <h3 class="text-ink font-semibold text-sm">Clone</h3>
+            <code class="block mt-1.5 bg-surface rounded-lg px-3 py-2 text-sm font-mono text-ink-mute">git clone https://github.com/akashnikhra/LedgerMitra.git</code>
+          </div>
+        </div>
+        <div class="flex items-start gap-4 bg-surface-elevated rounded-xl border border-white/5 p-5 hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-brand/20 text-brand font-mono text-sm flex items-center justify-center font-bold">2</span>
+          <div>
+            <h3 class="text-ink font-semibold text-sm">Install</h3>
+            <code class="block mt-1.5 bg-surface rounded-lg px-3 py-2 text-sm font-mono text-ink-mute">cd LedgerMitra &amp;&amp; install.bat</code>
+          </div>
+        </div>
+        <div class="flex items-start gap-4 bg-surface-elevated rounded-xl border border-white/5 p-5 hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <span class="flex-shrink-0 w-8 h-8 rounded-lg bg-brand/20 text-brand font-mono text-sm flex items-center justify-center font-bold">3</span>
+          <div>
+            <h3 class="text-ink font-semibold text-sm">Launch</h3>
+            <code class="block mt-1.5 bg-surface rounded-lg px-3 py-2 text-sm font-mono text-ink-mute">start.bat</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 bg-surface-elevated rounded-xl border border-white/5 p-4 text-center">
+        <p class="text-ink-mute text-sm">Default login: <code class="bg-surface rounded px-2 py-0.5 font-mono text-xs text-ink">admin</code> / <code class="bg-surface rounded px-2 py-0.5 font-mono text-xs text-ink">admin123</code></p>
+      </div>
     </div>
   </section>
 
-  <section class="section" id="download">
-    <div class="container" style="text-align:center">
-      <h2 class="section-heading">Download</h2>
-      <p style="font-size:24px; font-weight:700; color:var(--ink); margin-bottom:8px">Get LedgerMitra</p>
-      <p style="color:var(--mute); margin-bottom:24px">Free. Offline. Your data stays on your machine.</p>
+  <!-- Tech Stack -->
+  <section class="py-24 border-t border-white/5">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="font-mono text-xs tracking-[2px] text-ink-mute uppercase">&gt; Tech Stack</span>
 
-      <div style="display:inline-flex; align-items:center; gap:8px; background:var(--surface-card); border-radius:4px; padding:12px 16px; font-family:var(--font-mono); font-size:14px; margin-bottom:24px">
-        <span style="color:var(--mute)">$</span>
-        <span style="color:var(--ink)">winget install LedgerMitra</span>
-        <span style="color:var(--ash); font-size:12px; cursor:pointer" onclick="navigator.clipboard?.writeText('winget install LedgerMitra')">[copy]</span>
+      <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-4 text-center hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <p class="text-ink font-semibold text-sm">Electron 30</p>
+          <p class="text-ink-mute text-xs mt-1">Desktop Shell</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-4 text-center hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <p class="text-ink font-semibold text-sm">React 18</p>
+          <p class="text-ink-mute text-xs mt-1">Frontend</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-4 text-center hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <p class="text-ink font-semibold text-sm">SQLite</p>
+          <p class="text-ink-mute text-xs mt-1">Database (WAL mode)</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-4 text-center hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <p class="text-ink font-semibold text-sm">TypeScript</p>
+          <p class="text-ink-mute text-xs mt-1">Language</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-4 text-center hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <p class="text-ink font-semibold text-sm">electron-vite</p>
+          <p class="text-ink-mute text-xs mt-1">Build Tool</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-4 text-center hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <p class="text-ink font-semibold text-sm">better-sqlite3</p>
+          <p class="text-ink-mute text-xs mt-1">SQLite Driver</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-4 text-center hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <p class="text-ink font-semibold text-sm">whatsapp-web.js</p>
+          <p class="text-ink-mute text-xs mt-1">WhatsApp Integration</p>
+        </div>
+        <div class="bg-surface-elevated rounded-xl border border-white/5 p-4 text-center hover:border-brand/30 transition-colors duration-200 cursor-pointer">
+          <p class="text-ink font-semibold text-sm">electron-builder</p>
+          <p class="text-ink-mute text-xs mt-1">Packaging (NSIS)</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Download -->
+  <section id="download" class="py-24 border-t border-white/5">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <span class="font-mono text-xs tracking-[2px] text-ink-mute uppercase">&gt; Download</span>
+      <h2 class="text-2xl sm:text-3xl font-bold text-ink mt-4">Get LedgerMitra</h2>
+      <p class="text-ink-mute mt-2">Free. Offline. Your data stays on your machine.</p>
+
+      <div class="inline-flex items-center gap-2 bg-surface-elevated rounded-xl border border-white/5 px-5 py-3 font-mono text-sm mt-8">
+        <span class="text-ink-mute">$</span>
+        <span class="text-ink">winget install LedgerMitra</span>
+        <button onclick="navigator.clipboard?.writeText('winget install LedgerMitra')" class="text-ink-mute hover:text-ink transition-colors duration-200 cursor-pointer text-xs ml-2">[copy]</button>
       </div>
 
-      <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:16px">
-        <button class="btn-dark">Download for Windows ↓</button>
-        <a class="btn-outline" href="https://github.com/akashnikhra/LedgerMitra/releases">View Releases →</a>
+      <div class="flex flex-wrap justify-center gap-3 mt-8">
+        <button class="inline-flex items-center h-11 px-6 bg-brand text-surface font-semibold text-sm rounded-xl hover:bg-brand-light transition-colors duration-200 cursor-pointer shadow-lg shadow-brand/25">
+          Download for Windows ↓
+        </button>
+        <a href="https://github.com/akashnikhra/LedgerMitra/releases" class="inline-flex items-center h-11 px-6 border border-white/10 text-ink text-sm font-medium rounded-xl hover:bg-white/5 transition-colors duration-200 cursor-pointer">
+          View Releases →
+        </a>
       </div>
 
-      <div style="display:flex; gap:16px; justify-content:center; color:var(--mute); font-size:12px; flex-wrap:wrap">
+      <div class="flex flex-wrap justify-center gap-6 mt-8 text-ink-mute text-xs font-mono">
         <span>Windows 10+</span>
         <span>64-bit</span>
         <span>~80 MB</span>
@@ -242,15 +294,16 @@
     </div>
   </section>
 
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-links">
-        <a href="https://github.com/akashnikhra/LedgerMitra">GitHub</a>
-        <a href="https://github.com/akashnikhra/LedgerMitra#readme">Documentation</a>
-        <a href="https://github.com/akashnikhra/LedgerMitra/releases">Release Notes</a>
-        <a href="https://github.com/akashnikhra/LedgerMitra/blob/main/LICENSE">License (MIT)</a>
+  <!-- Footer -->
+  <footer class="py-10 border-t border-white/5">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-wrap justify-center gap-6">
+        <a href="https://github.com/akashnikhra/LedgerMitra" class="text-ink-mute text-sm hover:text-ink transition-colors duration-200 cursor-pointer">GitHub</a>
+        <a href="https://github.com/akashnikhra/LedgerMitra#readme" class="text-ink-mute text-sm hover:text-ink transition-colors duration-200 cursor-pointer">Documentation</a>
+        <a href="https://github.com/akashnikhra/LedgerMitra/releases" class="text-ink-mute text-sm hover:text-ink transition-colors duration-200 cursor-pointer">Release Notes</a>
+        <a href="https://github.com/akashnikhra/LedgerMitra/blob/main/LICENSE" class="text-ink-mute text-sm hover:text-ink transition-colors duration-200 cursor-pointer">License (MIT)</a>
       </div>
-      <p class="footer-copy">© 2026 LedgerMitra — Built with Electron + React + SQLite</p>
+      <p class="text-center text-ink-mute text-xs mt-6 font-mono">© 2026 LedgerMitra — Built with Electron + React + SQLite</p>
     </div>
   </footer>
 
