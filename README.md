@@ -4,6 +4,12 @@
     <strong>Modern desktop accounting software for small businesses</strong>
   </p>
   <p>
+    <img alt="GitHub License" src="https://img.shields.io/badge/license-MIT-blue">
+    <img alt="Electron" src="https://img.shields.io/badge/Electron-30-blueviolet">
+    <img alt="React" src="https://img.shields.io/badge/React-18-61dafb">
+    <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-lightgrey">
+  </p>
+  <p>
     <a href="#features">Features</a> •
     <a href="#tech-stack">Tech Stack</a> •
     <a href="#getting-started">Getting Started</a> •
@@ -15,7 +21,17 @@
 
 LedgerMitra is a greenfield desktop accounting application built with Electron, React, and TypeScript. It replaces legacy accounting software (Speed Plus) while providing a modern, intuitive interface for day-to-day bookkeeping — invoices, receipts, purchases, ledger management, and GST-ready reporting.
 
+All data stays **offline on your machine** — no cloud, no subscriptions, no internet required.
+
 ---
+
+## Why LedgerMitra?
+
+- **Offline-first.** All data lives in a local SQLite database. No server, no cloud dependency, no monthly fees.
+- **Privacy-focused.** Your financial data never leaves your machine. Backup is a file copy.
+- **GST-ready.** Built-in CGST, SGST, IGST support with auto-calculation on invoices.
+- **Legacy migration.** Full import pipeline from Speed Plus (`.mdb`/`.bmw`) — no manual data entry for existing users.
+- **Lightweight.** Single Windows desktop app. No browser, no server process, no Docker.
 
 ## Features
 
@@ -33,6 +49,18 @@ LedgerMitra is a greenfield desktop accounting application built with Electron, 
 - **Legacy Import** — Full migration engine from Speed Plus MDB/BMW files
 - **Multi-Company** — Support for multiple companies with separate books
 
+## Key Accounting Features
+
+| Feature | Details |
+|---------|---------|
+| **Double-entry ledger** | Every invoice, receipt, and payment creates debit/credit entries. Balances are always consistent. |
+| **GST support** | CGST + SGST (intra-state) and IGST (inter-state) with configurable rates per product. Auto-calculated on invoices. |
+| **Invoice aging** | Outstanding amounts tracked per invoice. Aging buckets for follow-up. |
+| **Balance carry-forward** | Customer opening balances flow across financial years via `fy_carry_forwards` table with full audit trail. |
+| **Auto-numbering** | Invoice and receipt numbers auto-generated per financial year. |
+| **Stock tracking** | Product stock quantity updated on invoice/purchase creation. Reorder level alerts on dashboard. |
+| **Payment allocation** | Receipts can be auto-allocated against oldest outstanding invoices or manually assigned. |
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -49,7 +77,16 @@ LedgerMitra is a greenfield desktop accounting application built with Electron, 
 
 ## Screenshots
 
-> *Screenshots coming soon.*
+| Screen | Description |
+|--------|-------------|
+| **Dashboard** | KPI cards (total sales, outstanding, customer count), monthly revenue chart, top debtors, invoice aging, recent activity feed |
+| **Invoice Form** | Create/edit sales invoices with line-item entry, GST auto-calculation, customer search |
+| **Receipt Entry** | Record payments with auto-allocation to oldest outstanding invoices or manual per-invoice assignment |
+| **Ledger View** | Customer-wise ledger with debit/credit columns, running balance, date range filters |
+| **Legacy Import** | Scan, analyze, and import Speed Plus MDB files with multi-FY detection and audit logging |
+| **WhatsApp Send** | Send invoice/receipt PDFs directly via WhatsApp Web with customizable message template |
+
+> *Screenshots will be added once the UI reaches stable release.*
 
 ## Getting Started
 
@@ -62,7 +99,7 @@ LedgerMitra is a greenfield desktop accounting application built with Electron, 
 ### Installation
 
 ```bat
-git clone https://github.com/yourusername/LedgerMitra.git
+git clone https://github.com/akashnikhra/LedgerMitra.git
 cd LedgerMitra
 install.bat
 ```
@@ -97,6 +134,8 @@ The packaged installer will be in the `release/` directory.
 2. Create a company profile
 3. Set up a financial year (April–March by default)
 4. Start creating customers, products, and invoices
+
+> Your database is created at `data/ledgermitra.db` (or wherever `LEDGERMITRA_DATA_DIR` points). It's a single file — backup by copying it.
 
 ### Legacy Import
 
@@ -177,6 +216,7 @@ LedgerMitra/
 │       ├── types.ts            # TypeScript interfaces
 │       └── constants.ts        # App config & IPC channels
 ├── Upload/                     # Legacy data source directory
+├── .gitignore
 ├── electron.vite.config.ts
 ├── package.json
 ├── install.bat
