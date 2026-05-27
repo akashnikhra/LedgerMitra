@@ -20,3 +20,5 @@ coverage/
 # OS
 Thumbs.db
 .DS_Store
+
+# Visual companion artifacts.superpowers/
