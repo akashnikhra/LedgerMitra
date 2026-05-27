@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.1 (2026-05-28)
+
+### Bug Fixes
+- **Backup Import**: Fixed database restore not working after app restart. The `backup:import` handler now closes the SQLite connection before overwriting the database file and re-initializes it afterward, ensuring the restored data is visible after the renderer reloads. Previously the stale connection returned cached data from the old database. (839c02e)
+
 ## v1.0.0 (2026-05-28)
 
 Initial release of LedgerMitra — a modern offline desktop accounting application built with Electron, React, and TypeScript.
