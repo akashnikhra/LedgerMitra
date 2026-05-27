@@ -77,16 +77,61 @@ All data stays **offline on your machine** — no cloud, no subscriptions, no in
 
 ## Screenshots
 
-| Screen | Description |
-|--------|-------------|
-| **Dashboard** | KPI cards (total sales, outstanding, customer count), monthly revenue chart, top debtors, invoice aging, recent activity feed |
-| **Invoice Form** | Create/edit sales invoices with line-item entry, GST auto-calculation, customer search |
-| **Receipt Entry** | Record payments with auto-allocation to oldest outstanding invoices or manual per-invoice assignment |
-| **Ledger View** | Customer-wise ledger with debit/credit columns, running balance, date range filters |
-| **Legacy Import** | Scan, analyze, and import Speed Plus MDB files with multi-FY detection and audit logging |
-| **WhatsApp Send** | Send invoice/receipt PDFs directly via WhatsApp Web with customizable message template |
+### Dashboard
 
-> *Screenshots will be added once the UI reaches stable release.*
+Light & dark theme variants:
+
+<p align="center">
+  <img src="assets/dashboard-light.png" alt="Dashboard (Light)" width="80%"/>
+  <br/>
+  <em>Dashboard — KPI cards, revenue chart, top debtors, invoice aging, recent activity</em>
+</p>
+
+<p align="center">
+  <img src="assets/dashboard-dark.png" alt="Dashboard (Dark)" width="80%"/>
+  <br/>
+  <em>Dashboard (dark theme)</em>
+</p>
+
+### Invoice Form
+
+<p align="center">
+  <img src="assets/invoice-form.png" alt="Invoice Form" width="80%"/>
+  <br/>
+  <em>Sales invoice with line-item entry, customer search, GST auto-calculation</em>
+</p>
+
+### Receipt Entry
+
+<p align="center">
+  <img src="assets/receipt.png" alt="Receipt Entry" width="80%"/>
+  <br/>
+  <em>Payment receipt with auto-allocation to outstanding invoices</em>
+</p>
+
+### Ledger View
+
+<p align="center">
+  <img src="assets/ledger.png" alt="Ledger View" width="80%"/>
+  <br/>
+  <em>Customer-wise ledger with debit/credit columns, running balance, date filters</em>
+</p>
+
+### Legacy Import
+
+<p align="center">
+  <img src="assets/legacy-import.png" alt="Legacy Import" width="80%"/>
+  <br/>
+  <em>Speed Plus MDB file analyzer — table schemas, row counts, date ranges</em>
+</p>
+
+### WhatsApp Integration
+
+<p align="center">
+  <img src="assets/whatsapp.png" alt="WhatsApp Send" width="80%"/>
+  <br/>
+  <em>Send invoice/receipt PDFs directly via WhatsApp Web with customizable message</em>
+</p>
 
 ## Getting Started
 
