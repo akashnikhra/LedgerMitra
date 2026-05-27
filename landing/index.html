@@ -80,6 +80,33 @@
       white-space: pre;
     }
 
+    .section { padding: 96px 0; }
+    .section + .section { border-top: 1px solid var(--hairline); }
+    .hero-tui {
+      background: var(--surface-dark); padding: 48px 24px;
+      text-align: center;
+    }
+    .hero-tui .ascii-wordmark { color: var(--on-dark); font-size: 20px; }
+    .tui-prompt {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--surface-dark-elevated);
+      border-radius: 4px; padding: 8px 16px; font-size: 14px;
+    }
+    .tui-hint { color: var(--mute); font-size: 11px; margin-top: 8px; }
+    .hero-headline {
+      font-size: 38px; font-weight: 700; color: var(--ink);
+      line-height: 1.5; margin-bottom: 8px;
+    }
+    .hero-sub {
+      color: var(--mute); font-size: 16px;
+      max-width: 600px; margin: 0 auto 24px;
+    }
+    .hero-ctas { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    @media (max-width: 640px) {
+      .hero-headline { font-size: 28px; }
+      .section { padding: 48px 0; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     }
@@ -104,5 +131,34 @@
       </div>
     </div>
   </nav>
+
+  <section class="section" style="padding-top:48px">
+    <div class="container">
+      <div class="hero-tui">
+        <pre class="ascii-wordmark">
+┌─┐┬  ┌─┐┬ ┬┌─┐┌┬┐┌─┐┌┬┐┬┌─┐┌┐┌
+│  │  ├┤ │││└─┐ ││├─┤ │ ││ ││││
+└─┘┴─┘└─┘└┴┘└─┘─┴┘┴ ┴ ┴ ┴└─┘┘└┘
+        </pre>
+        <p style="color:var(--on-dark-mute); font-size:13px; margin:16px 0 24px">v1.0.0 — offline accounting for Windows</p>
+        <div class="tui-prompt">
+          <span style="color:var(--on-dark-mute)">$</span>
+          <span style="color:var(--on-dark)">install.bat</span>
+        </div>
+        <p class="tui-hint">tab navigate  ·  ctrl-p commands  ·  esc back</p>
+      </div>
+
+      <div style="text-align:center; margin-top:32px">
+        <h1 class="hero-headline">Offline desktop accounting.</h1>
+        <p class="hero-sub">
+          LedgerMitra replaces Speed Plus legacy accounting software. All data stays on your machine — no cloud, no subscriptions.
+        </p>
+        <div class="hero-ctas">
+          <a href="https://github.com/akashnikhra/LedgerMitra/releases" class="btn-dark">Download for Windows ↓</a>
+          <a href="https://github.com/akashnikhra/LedgerMitra" class="btn-outline">View on GitHub →</a>
+        </div>
+      </div>
+    </div>
+  </section>
 </body>
 </html>
