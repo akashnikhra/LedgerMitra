@@ -102,6 +102,21 @@
       max-width: 600px; margin: 0 auto 24px;
     }
     .hero-ctas { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .section-heading {
+      font-size: 16px; font-weight: 700; color: var(--ink);
+      margin-bottom: 32px;
+    }
+    .feature-row {
+      padding: 12px 0; border-top: 1px solid var(--hairline);
+      font-size: 15px;
+    }
+    .feature-row:first-child { border-top: none; }
+    .feature-row strong { color: var(--ink); }
+    .screenshot-pill {
+      background: var(--surface-card); border-radius: 4px;
+      padding: 16px; margin: 16px 0; text-align: center;
+    }
+    .screenshot-pill img { border-radius: 2px; margin: 0 auto; }
     @media (max-width: 640px) {
       .hero-headline { font-size: 28px; }
       .section { padding: 48px 0; }
@@ -158,6 +173,42 @@
           <a href="https://github.com/akashnikhra/LedgerMitra" class="btn-outline">View on GitHub →</a>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="container">
+      <h2 class="section-heading">[+] Features</h2>
+
+      <div class="feature-row"><strong>[+] Invoicing</strong> — Create GST-ready sales invoices with line items, auto-numbering, and CGST/SGST/IGST support.</div>
+      <div class="screenshot-pill"><img src="assets/invoice-form.png" alt="Invoice Form" style="width:100%; max-width:720px"></div>
+
+      <div class="feature-row"><strong>[+] Dashboard</strong> — KPI cards, monthly revenue trends, top debtors, invoice aging, and low stock alerts — all at a glance.</div>
+      <div class="screenshot-pill"><img src="assets/dashboard-light.png" alt="Dashboard" style="width:100%; max-width:720px"></div>
+
+      <div class="feature-row"><strong>[+] Purchase Invoices</strong> — Record purchases with stock updates and ledger integration. Full GST support.</div>
+
+      <div class="feature-row"><strong>[+] Receipts</strong> — Receive payments with auto-allocation to oldest outstanding invoices or manual per-invoice assignment.</div>
+      <div class="screenshot-pill"><img src="assets/receipt.png" alt="Receipt Entry" style="width:100%; max-width:720px"></div>
+
+      <div class="feature-row"><strong>[+] Ledger</strong> — Customer-wise and year-wise ledger with debit/credit columns, running balance, and date range filters.</div>
+      <div class="screenshot-pill"><img src="assets/ledger.png" alt="Ledger View" style="width:100%; max-width:720px"></div>
+
+      <div class="feature-row"><strong>[+] Products & Stock</strong> — SKU-based product catalog with rates, GST, HSN codes, stock tracking, and reorder alerts.</div>
+
+      <div class="feature-row"><strong>[+] Customers & Suppliers</strong> — Party master management with opening balances, GSTIN, state, and full transaction history.</div>
+
+      <div class="feature-row"><strong>[+] Legacy Import</strong> — Full migration engine from Speed Plus MDB/BMW files. Multi-FY detection, deduplication, audit logging.</div>
+      <div class="screenshot-pill"><img src="assets/legacy-import.png" alt="Legacy Import" style="width:100%; max-width:720px"></div>
+
+      <div class="feature-row"><strong>[*] Private & Offline</strong> — Your financial data never leaves your machine. Single SQLite file. Backup by copying it.</div>
+
+      <div class="feature-row"><strong>[+] WhatsApp Integration</strong> — Send invoice and receipt PDFs directly via WhatsApp Web with customizable message templates.</div>
+      <div class="screenshot-pill"><img src="assets/whatsapp.png" alt="WhatsApp Integration" style="width:100%; max-width:720px"></div>
+
+      <div class="feature-row"><strong>[+] Print & PDF</strong> — Invoice, receipt, and ledger printing with save-to-PDF.</div>
+
+      <div class="feature-row"><strong>[+] Backup & Restore</strong> — One-click database export and import.</div>
     </div>
   </section>
 </body>
