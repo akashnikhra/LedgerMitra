@@ -138,6 +138,8 @@
     .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
     .fade-in.visible { opacity: 1; transform: translateY(0); }
     .parallax { will-change: transform; }
+    .parallax-content { will-change: transform; }
+    .parallax-bg { will-change: transform; }
     .card-hover { transition: border-color 0.3s, transform 0.3s; }
     .card-hover:hover { border-color: var(--ink); transform: translateY(-2px); }
     .footer-copy { text-align: center; color: var(--mute); font-size: 14px; }
@@ -171,9 +173,10 @@
     </div>
   </nav>
 
-  <section class="section" style="padding-top:24px">
-    <div class="container">
-      <div class="hero-tui parallax">
+  <section class="section" style="padding-top:24px; position:relative; overflow:hidden">
+    <div class="container" style="position:relative; z-index:1">
+      <div class="hero-tui parallax" style="position:relative; overflow:hidden">
+        <div class="parallax-bg" style="position:absolute; inset:0; opacity:0.04; background-image:radial-gradient(circle, #fdfcfc 1px, transparent 1px); background-size:24px 24px"></div>
         <div style="font-size:20px; font-weight:700; letter-spacing:4px; color:var(--on-dark); margin-bottom:16px">LEDGERMITRA</div>
         <p style="color:var(--on-dark-mute); font-size:13px; margin-bottom:24px">v1.0.0 — offline accounting for Windows</p>
         <div style="background:var(--surface-dark-elevated); border-radius:4px; padding:12px 16px; text-align:left; font-size:13px; max-width:520px; margin:0 auto">
@@ -183,7 +186,7 @@
         <p class="tui-hint" style="margin-top:24px">tab navigate  ·  ctrl-p commands  ·  esc back</p>
       </div>
 
-      <div style="text-align:center; margin-top:32px">
+      <div class="parallax-content" style="text-align:center; margin-top:32px">
         <h1 class="hero-headline">Offline desktop accounting.</h1>
         <p class="hero-sub">
           LedgerMitra replaces Speed Plus legacy accounting software. All data stays on your machine — no cloud, no subscriptions.
@@ -337,7 +340,9 @@
 <script>
 ;(function() {
   var sections = document.querySelectorAll('.fade-in');
-  var hero = document.querySelector('.parallax');
+  var heroTui = document.querySelector('.parallax');
+  var heroContent = document.querySelector('.parallax-content');
+  var heroBg = document.querySelector('.parallax-bg');
   var ticking = false;
 
   var observer = new IntersectionObserver(function(entries) {
@@ -347,7 +352,9 @@
 
   function onScroll() {
     var sy = window.scrollY;
-    if (hero) hero.style.transform = 'translateY(' + (sy * 0.08) + 'px)';
+    if (heroTui) heroTui.style.transform = 'translateY(' + (sy * 0.06) + 'px)';
+    if (heroContent) heroContent.style.transform = 'translateY(' + (sy * 0.14) + 'px)';
+    if (heroBg) heroBg.style.transform = 'translateY(' + (sy * 0.03) + 'px)';
     ticking = false;
   }
 
