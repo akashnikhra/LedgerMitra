@@ -131,9 +131,17 @@
       padding: 16px; margin: 16px 0; text-align: center;
     }
     .screenshot-pill img { border-radius: 2px; margin: 0 auto; }
+    .footer { padding: 32px 0; border-top: 1px solid var(--hairline); }
+    .footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+    .footer-links a { color: var(--body); font-size: 14px; transition: color 0.2s; cursor: pointer; }
+    .footer-links a:hover { color: var(--ink); }
+    .footer-copy { text-align: center; color: var(--mute); font-size: 14px; }
     @media (max-width: 640px) {
       .hero-headline { font-size: 28px; }
       .section { padding: 48px 0; }
+      .nav .container { flex-direction: column; height: auto; padding: 12px 24px; gap: 8px; }
+      .nav-links { gap: 12px; }
+      .btn-dark, .btn-outline { width: 100%; justify-content: center; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -274,5 +282,17 @@
       </div>
     </div>
   </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-links">
+        <a href="https://github.com/akashnikhra/LedgerMitra">GitHub</a>
+        <a href="https://github.com/akashnikhra/LedgerMitra#readme">Documentation</a>
+        <a href="https://github.com/akashnikhra/LedgerMitra/releases">Release Notes</a>
+        <a href="https://github.com/akashnikhra/LedgerMitra/blob/main/LICENSE">License (MIT)</a>
+      </div>
+      <p class="footer-copy">© 2026 LedgerMitra — Built with Electron + React + SQLite</p>
+    </div>
+  </footer>
 </body>
 </html>
