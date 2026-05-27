@@ -1,0 +1,466 @@
+# LedgerMitra Landing Page Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Build a terminal-native landing page for LedgerMitra at `landing/index.html` that drives downloads and migration for Speed Plus users.
+
+**Architecture:** Single self-contained HTML5 file with embedded CSS (no framework, no bundler). Uses JetBrains Mono for 100% monospaced typography. Fonts loaded via Google Fonts. Zero JavaScript for the static version except clipboard copy on the install snippet.
+
+**Tech Stack:** Plain HTML5 + CSS3, JetBrains Mono (Google Fonts), no build tools.
+
+---
+
+### Task 1: HTML scaffold + design tokens + fonts
+
+**Files:**
+- Modify: `landing/index.html`
+
+- [ ] **Step 1: Write the HTML skeleton with design tokens and font loading**
+
+```html
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LedgerMitra — Offline Desktop Accounting</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #201d1d;
+      --ink-deep: #0f0000;
+      --body: #424245;
+      --mute: #646262;
+      --ash: #9a9898;
+      --canvas: #fdfcfc;
+      --surface-soft: #f8f7f7;
+      --surface-card: #f1eeee;
+      --surface-dark: #201d1d;
+      --surface-dark-elevated: #302c2c;
+      --hairline: rgba(15, 0, 0, 0.12);
+      --hairline-strong: #646262;
+      --on-dark: #fdfcfc;
+      --on-dark-mute: #9a9898;
+      --accent: #007aff;
+      --font: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--canvas);
+      color: var(--body);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+    pre { font-family: var(--font); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+</body>
+</html>
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add -f landing/index.html
+git commit -m "wip: scaffold landing page with design tokens"
+```
+
+---
+
+### Task 2: Navigation bar
+
+**Files:**
+- Modify: `landing/index.html`
+
+- [ ] **Step 1: Add nav styles**
+
+Add inside `<style>` after the reset block:
+```css
+.nav {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--canvas);
+  border-bottom: 1px solid var(--hairline);
+  height: 56px;
+}
+.nav .container {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 100%;
+}
+.nav-links { display: flex; gap: 24px; align-items: center; }
+.nav-links a {
+  color: var(--body); font-size: 14px;
+  transition: color 0.2s; cursor: pointer;
+}
+.nav-links a:hover { color: var(--ink); }
+.btn-dark {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 36px; padding: 4px 20px;
+  background: var(--ink); color: var(--on-dark);
+  border-radius: 4px; font-family: var(--font);
+  font-size: 14px; font-weight: 500;
+  border: none; cursor: pointer; transition: background 0.2s;
+}
+.btn-dark:hover { background: var(--ink-deep); }
+.btn-outline {
+  display: inline-flex; align-items: center;
+  height: 36px; padding: 4px 20px;
+  background: transparent; color: var(--ink);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 4px; font-family: var(--font);
+  font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: background 0.2s;
+}
+.btn-outline:hover { background: var(--surface-soft); }
+.ascii-wordmark {
+  font-family: var(--font); font-size: 14px; font-weight: 700;
+  letter-spacing: 4px; line-height: 1.2; color: var(--ink);
+  white-space: pre;
+}
+```
+
+- [ ] **Step 2: Add nav HTML**
+
+Inside `<body>`:
+```html
+<nav class="nav">
+  <div class="container">
+    <pre class="ascii-wordmark">
+┌─┐┬  ┌─┐┬ ┬┌─┐┌┬┐┌─┐┌┬┐┬┌─┐┌┐┌
+│  │  ├┤ │││└─┐ ││├─┤ │ ││ ││││
+└─┘┴─┘└─┘└┴┘└─┘─┴┘┴ ┴ ┴ ┴└─┘┘└┘
+    </pre>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#migration">Migration</a>
+      <a href="#quickstart">Quick Start</a>
+      <a href="https://github.com/akashnikhra/LedgerMitra" class="btn-dark">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </div>
+</nav>
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add -f landing/index.html
+git commit -m "wip: add navigation bar with ASCII wordmark and GitHub CTA"
+```
+
+---
+
+### Task 3: Hero section (TUI mockup + CTAs)
+
+**Files:**
+- Modify: `landing/index.html`
+
+- [ ] **Step 1: Add hero styles**
+
+```css
+.section { padding: 96px 0; }
+.section + .section { border-top: 1px solid var(--hairline); }
+.hero-tui {
+  background: var(--surface-dark); padding: 48px 24px;
+  text-align: center;
+}
+.hero-tui .ascii-wordmark { color: var(--on-dark); font-size: 20px; }
+.tui-prompt {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--surface-dark-elevated);
+  border-radius: 4px; padding: 8px 16px; font-size: 14px;
+}
+.tui-hint { color: var(--mute); font-size: 11px; margin-top: 8px; }
+.hero-headline {
+  font-size: 38px; font-weight: 700; color: var(--ink);
+  line-height: 1.5; margin-bottom: 8px;
+}
+.hero-sub {
+  color: var(--mute); font-size: 16px;
+  max-width: 600px; margin: 0 auto 24px;
+}
+.hero-ctas { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+@media (max-width: 640px) {
+  .hero-headline { font-size: 28px; }
+  .section { padding: 48px 0; }
+}
+```
+
+- [ ] **Step 2: Add hero HTML after nav**
+
+```html
+<section class="section" style="padding-top:48px">
+  <div class="container">
+    <div class="hero-tui">
+      <pre class="ascii-wordmark">
+┌─┐┬  ┌─┐┬ ┬┌─┐┌┬┐┌─┐┌┬┐┬┌─┐┌┐┌
+│  │  ├┤ │││└─┐ ││├─┤ │ ││ ││││
+└─┘┴─┘└─┘└┴┘└─┘─┴┘┴ ┴ ┴ ┴└─┘┘└┘
+      </pre>
+      <p style="color:var(--on-dark-mute); font-size:13px; margin:16px 0 24px">v1.0.0 — offline accounting for Windows</p>
+      <div class="tui-prompt">
+        <span style="color:var(--on-dark-mute)">$</span>
+        <span style="color:var(--on-dark)">install.bat</span>
+      </div>
+      <p class="tui-hint">tab navigate  ·  ctrl-p commands  ·  esc back</p>
+    </div>
+
+    <div style="text-align:center; margin-top:32px">
+      <h1 class="hero-headline">Offline desktop accounting.</h1>
+      <p class="hero-sub">
+        LedgerMitra replaces Speed Plus legacy accounting software. All data stays on your machine — no cloud, no subscriptions.
+      </p>
+      <div class="hero-ctas">
+        <a href="https://github.com/akashnikhra/LedgerMitra/releases" class="btn-dark">Download for Windows ↓</a>
+        <a href="https://github.com/akashnikhra/LedgerMitra" class="btn-outline">View on GitHub →</a>
+      </div>
+    </div>
+  </div>
+</section>
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add -f landing/index.html
+git commit -m "wip: add hero section with TUI mockup and CTAs"
+```
+
+---
+
+### Task 4: Features section (12 features + screenshots)
+
+**Files:**
+- Modify: `landing/index.html`
+
+- [ ] **Step 1: Add features styles**
+
+```css
+.section-heading {
+  font-size: 16px; font-weight: 700; color: var(--ink);
+  margin-bottom: 32px;
+}
+.feature-row {
+  padding: 12px 0; border-top: 1px solid var(--hairline);
+  font-size: 15px;
+}
+.feature-row:first-child { border-top: none; }
+.feature-row strong { color: var(--ink); }
+.screenshot-pill {
+  background: var(--surface-card); border-radius: 4px;
+  padding: 16px; margin: 16px 0; text-align: center;
+}
+.screenshot-pill img { border-radius: 2px; margin: 0 auto; }
+```
+
+- [ ] **Step 2: Add features HTML after hero**
+
+```html
+<section class="section" id="features">
+  <div class="container">
+    <h2 class="section-heading">[+] Features</h2>
+
+    <div class="feature-row"><strong>[+] Invoicing</strong> — Create GST-ready sales invoices with line items, auto-numbering, and CGST/SGST/IGST support.</div>
+    <div class="screenshot-pill"><img src="assets/invoice-form.png" alt="Invoice Form" style="width:100%; max-width:720px"></div>
+
+    <div class="feature-row"><strong>[+] Dashboard</strong> — KPI cards, monthly revenue trends, top debtors, invoice aging, and low stock alerts — all at a glance.</div>
+    <div class="screenshot-pill"><img src="assets/dashboard-light.png" alt="Dashboard" style="width:100%; max-width:720px"></div>
+
+    <div class="feature-row"><strong>[+] Purchase Invoices</strong> — Record purchases with stock updates and ledger integration. Full GST support.</div>
+
+    <div class="feature-row"><strong>[+] Receipts</strong> — Receive payments with auto-allocation to oldest outstanding invoices or manual per-invoice assignment.</div>
+    <div class="screenshot-pill"><img src="assets/receipt.png" alt="Receipt Entry" style="width:100%; max-width:720px"></div>
+
+    <div class="feature-row"><strong>[+] Ledger</strong> — Customer-wise and year-wise ledger with debit/credit columns, running balance, and date range filters.</div>
+    <div class="screenshot-pill"><img src="assets/ledger.png" alt="Ledger View" style="width:100%; max-width:720px"></div>
+
+    <div class="feature-row"><strong>[+] Products & Stock</strong> — SKU-based product catalog with rates, GST, HSN codes, stock tracking, and reorder alerts.</div>
+
+    <div class="feature-row"><strong>[+] Customers & Suppliers</strong> — Party master management with opening balances, GSTIN, state, and full transaction history.</div>
+
+    <div class="feature-row"><strong>[+] Legacy Import</strong> — Full migration engine from Speed Plus MDB/BMW files. Multi-FY detection, deduplication, audit logging.</div>
+    <div class="screenshot-pill"><img src="assets/legacy-import.png" alt="Legacy Import" style="width:100%; max-width:720px"></div>
+
+    <div class="feature-row"><strong>[*] Private & Offline</strong> — Your financial data never leaves your machine. Single SQLite file. Backup by copying it.</div>
+
+    <div class="feature-row"><strong>[+] WhatsApp Integration</strong> — Send invoice and receipt PDFs directly via WhatsApp Web with customizable message templates.</div>
+    <div class="screenshot-pill"><img src="assets/whatsapp.png" alt="WhatsApp Integration" style="width:100%; max-width:720px"></div>
+
+    <div class="feature-row"><strong>[+] Print & PDF</strong> — Invoice, receipt, and ledger printing with save-to-PDF.</div>
+
+    <div class="feature-row"><strong>[+] Backup & Restore</strong> — One-click database export and import.</div>
+  </div>
+</section>
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add -f landing/index.html
+git commit -m "wip: add features section with screenshots"
+```
+
+---
+
+### Task 5: Migration section
+
+**Files:**
+- Modify: `landing/index.html`
+
+- [ ] **Step 1: Add migration HTML after features**
+
+```html
+<section class="section" id="migration">
+  <div class="container">
+    <h2 class="section-heading">[>] Migration from Speed Plus</h2>
+    <p style="color:var(--mute); margin-bottom:24px">
+      LedgerMitra provides a complete migration pipeline from Speed Plus (<code>.mdb</code> / <code>.bmw</code>) files. Your data, your history — moved in one pass.
+    </p>
+
+    <div class="feature-row"><strong>[+] Items</strong> → Products (SKU, rates, GST, stock)</div>
+    <div class="feature-row"><strong>[+] Account</strong> → Customers (party ledgers, opening balance)</div>
+    <div class="feature-row"><strong>[+] BillMaster</strong> → Invoices (sales vouchers)</div>
+    <div class="feature-row"><strong>[+] Ledger</strong> → Ledger Entries (payments / receipts)</div>
+    <div class="feature-row"><strong>[+] Company</strong> → Company (name during wizard)</div>
+
+    <div style="margin-top:24px">
+      <div class="feature-row"><strong>[+]</strong> Multi-FY detection within a single MDB file</div>
+      <div class="feature-row"><strong>[+]</strong> Deduplication via file hash tracking</div>
+      <div class="feature-row"><strong>[+]</strong> Balance carry-forward across financial years</div>
+      <div class="feature-row"><strong>[+]</strong> Audit logging with skipped item details</div>
+    </div>
+
+    <div style="margin-top:32px">
+      <a href="https://github.com/akashnikhra/LedgerMitra#migration" class="btn-dark">View Migration Guide →</a>
+    </div>
+  </div>
+</section>
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add -f landing/index.html
+git commit -m "wip: add migration section for Speed Plus users"
+```
+
+---
+
+### Task 6: Quick Start section
+
+**Files:**
+- Modify: `landing/index.html`
+
+- [ ] **Step 1: Add quick start styles**
+
+```css
+.snippet-pill {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--surface-card); border-radius: 4px;
+  padding: 16px; margin: 8px 0;
+}
+.snippet-pill code {
+  font-family: var(--font); font-size: 14px; color: var(--ink);
+}
+.snippet-num {
+  flex-shrink: 0; width: 28px; height: 28px;
+  background: var(--surface-soft); border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px; color: var(--ink);
+}
+```
+
+- [ ] **Step 2: Add quick start HTML after migration**
+
+```html
+<section class="section" id="quickstart">
+  <div class="container">
+    <h2 class="section-heading">[+] Quick Start</h2>
+
+    <div class="snippet-pill">
+      <span class="snippet-num">1</span>
+      <code>git clone https://github.com/akashnikhra/LedgerMitra.git</code>
+    </div>
+    <div class="snippet-pill">
+      <span class="snippet-num">2</span>
+      <code>cd LedgerMitra &amp;&amp; install.bat</code>
+    </div>
+    <div class="snippet-pill">
+      <span class="snippet-num">3</span>
+      <code>start.bat</code>
+    </div>
+
+    <div style="background:var(--surface-card); border-radius:4px; padding:12px 16px; margin-top:16px">
+      <p style="color:var(--mute); font-size:14px">Default login: <code style="background:var(--surface-soft); padding:2px 6px; border-radius:2px;">admin</code> / <code style="background:var(--surface-soft); padding:2px 6px; border-radius:2px;">admin123</code></p>
+    </div>
+  </div>
+</section>
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add -f landing/index.html
+git commit -m "wip: add quick start section"
+```
+
+---
+
+### Task 7: Footer + responsive polish
+
+**Files:**
+- Modify: `landing/index.html`
+
+- [ ] **Step 1: Add footer styles**
+
+```css
+.footer { padding: 32px 0; border-top: 1px solid var(--hairline); }
+.footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+.footer-links a { color: var(--body); font-size: 14px; transition: color 0.2s; cursor: pointer; }
+.footer-links a:hover { color: var(--ink); }
+.footer-copy { text-align: center; color: var(--mute); font-size: 14px; }
+@media (max-width: 640px) {
+  .nav .container { flex-direction: column; height: auto; padding: 12px 24px; gap: 8px; }
+  .nav-links { gap: 12px; }
+  .btn-dark, .btn-outline { width: 100%; justify-content: center; }
+}
+```
+
+- [ ] **Step 2: Add footer HTML after quick start, before `</body>`**
+
+```html
+<footer class="footer">
+  <div class="container">
+    <div class="footer-links">
+      <a href="https://github.com/akashnikhra/LedgerMitra">GitHub</a>
+      <a href="https://github.com/akashnikhra/LedgerMitra#readme">Documentation</a>
+      <a href="https://github.com/akashnikhra/LedgerMitra/releases">Release Notes</a>
+      <a href="https://github.com/akashnikhra/LedgerMitra/blob/main/LICENSE">License (MIT)</a>
+    </div>
+    <p class="footer-copy">© 2026 LedgerMitra — Built with Electron + React + SQLite</p>
+  </div>
+</footer>
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add -f landing/index.html
+git commit -m "wip: add footer and responsive polish"
+git push
+```
