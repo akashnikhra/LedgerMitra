@@ -174,22 +174,14 @@
       max-width: 100%; max-height: 100%; border-radius: 4px;
       cursor: default; box-shadow: 0 4px 32px rgba(0,0,0,0.4);
     }
-    @media (max-width: 640px) {
-      .hero-headline { font-size: 28px; }
-      .section { padding: 32px 0; }
-      .nav .container { flex-direction: column; height: auto; padding: 12px 24px; gap: 8px; }
-      .nav-links { gap: 12px; }
-      .btn-dark, .btn-outline { width: 100%; justify-content: center; }
-    }
-
     @media (max-width: 480px) {
       .container { padding: 0 16px; }
       .hero-headline { font-size: 22px; }
       .hero-sub { font-size: 14px; }
       .hero-tui { padding: 24px 16px; }
       .hero-tui .ascii-wordmark { font-size: 16px; }
-      .hero-tui div[style*="background:var(--surface-dark-elevated)"] { padding: 10px 12px; font-size: 12px; overflow-x: auto; white-space: nowrap; }
-      .hero-tui code { font-size: 12px; }
+      .hero-tui div[style*="background:var(--surface-dark-elevated)"] { padding: 10px 12px; font-size: 12px; }
+      .hero-tui code { font-size: 12px; word-break: break-all; }
       .section-heading { font-size: 17px; margin-bottom: 20px; }
       .feature-row { font-size: 14px; padding: 10px 0; }
       .snippet-pill { gap: 10px; padding: 10px 12px; }
@@ -221,7 +213,7 @@
       .btn-dark, .btn-outline { width: 100%; justify-content: center; }
       .hero-tui { padding: 32px 16px; }
       .hero-tui div[style*="background:var(--surface-dark-elevated)"] { overflow-x: auto; }
-      .hero-tui code { white-space: nowrap; }
+      .hero-tui code { word-break: break-all; }
       .footer-links { gap: 16px; }
     }
 
