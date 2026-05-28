@@ -52,6 +52,19 @@
       display: flex; align-items: center; justify-content: space-between;
       height: 100%;
     }
+    .nav-toggle {
+      display: none;
+      background: none; border: none; cursor: pointer;
+      padding: 6px; color: var(--ink); line-height: 0;
+    }
+    .nav-toggle span {
+      display: block; width: 20px; height: 2px;
+      background: var(--ink); border-radius: 1px;
+      margin: 5px 0; transition: transform 0.2s, opacity 0.2s;
+    }
+    .nav-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .nav-toggle.open span:nth-child(2) { opacity: 0; }
+    .nav-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
     .nav-links { display: flex; gap: 24px; align-items: center; }
     .nav-links a { color: var(--body); font-size: 14px; transition: color 0.2s; cursor: pointer; }
     .nav-links a:hover { color: var(--ink); }
@@ -172,7 +185,7 @@
       .snippet-pill code { font-size: 12px; word-break: break-all; }
       .screenshot-pill { padding: 8px; }
       .section { padding: 24px 0; }
-      .nav-links a { font-size: 12px; }
+      .nav-links a { font-size: 12px; padding: 6px 12px; }
       .btn-dark, .btn-outline { height: 32px; font-size: 13px; }
       .footer { padding: 24px 0; }
       .footer-links { gap: 12px; }
@@ -184,8 +197,15 @@
     @media (max-width: 640px) {
       .hero-headline { font-size: 28px; }
       .section { padding: 32px 0; }
-      .nav .container { flex-direction: column; height: auto; padding: 10px 16px; gap: 6px; }
-      .nav-links { flex-wrap: wrap; justify-content: center; gap: 8px; }
+      .nav .container { flex-direction: column; height: auto; padding: 8px 16px; gap: 0; }
+      .nav-toggle { display: block; }
+      .nav-links {
+        flex-direction: column; width: 100%; gap: 4px; padding: 0;
+        display: none; overflow: hidden;
+      }
+      .nav-links.open { display: flex; padding: 8px 0 4px; }
+      .nav-links a { padding: 8px 12px; width: 100%; border-radius: 4px; }
+      .nav-links a:hover { background: var(--surface-soft); }
       .btn-dark, .btn-outline { width: 100%; justify-content: center; }
       .hero-tui { padding: 32px 16px; }
       .hero-tui div[style*="background:var(--surface-dark-elevated)"] { overflow-x: auto; }
@@ -206,13 +226,18 @@
 <body>
   <nav class="nav">
     <div class="container">
-      <span style="font-weight:700; font-size:14px; letter-spacing:4px; color:var(--ink)">LEDGERMITRA</span>
-      <div class="nav-links">
+      <div style="display:flex; align-items:center; justify-content:space-between; width:100%">
+        <span style="font-weight:700; font-size:14px; letter-spacing:4px; color:var(--ink)">LEDGERMITRA</span>
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" type="button">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+      <div class="nav-links" id="navLinks">
         <a href="#features">Features</a>
         <a href="#why">Why</a>
         <a href="#migration">Migration</a>
         <a href="#quickstart">Quick Start</a>
-        <a href="https://github.com/akashnikhra/LedgerMitra" class="btn-outline" style="gap:6px">
+        <a href="https://github.com/akashnikhra/LedgerMitra" class="btn-outline" style="gap:6px" 
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
           GitHub
         </a>
@@ -410,6 +435,21 @@
   var heroContent = document.querySelector('.parallax-content');
   var heroBg = document.querySelector('.parallax-bg');
   var ticking = false;
+  var toggle = document.getElementById('navToggle');
+  var links = document.getElementById('navLinks');
+
+  if (toggle && links) {
+    toggle.addEventListener('click', function() {
+      links.classList.toggle('open');
+      toggle.classList.toggle('open');
+    });
+    links.querySelectorAll('a').forEach(function(a) {
+      a.addEventListener('click', function() {
+        links.classList.remove('open');
+        toggle.classList.remove('open');
+      });
+    });
+  }
 
   var observer = new IntersectionObserver(function(entries) {
     entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('visible'); });
