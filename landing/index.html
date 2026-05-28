@@ -54,7 +54,7 @@
     }
     .nav-toggle {
       display: none;
-      background: none; border: none; cursor: pointer;
+      background: none; border: 1px solid var(--hairline-strong); border-radius: 4px; cursor: pointer;
       padding: 6px; color: var(--ink); line-height: 0;
     }
     .nav-toggle span {
@@ -163,6 +163,17 @@
     .footer-contact a { display:inline-flex; align-items:center; gap:6px; color:var(--mute); transition:color 0.2s; }
     .footer-contact a:hover { color:var(--ink); }
     .footer-copy { text-align: center; color: var(--mute); font-size: 14px; }
+    .screenshot-pill img { cursor: pointer; }
+    .lightbox {
+      display: none; position: fixed; inset: 0; z-index: 100;
+      background: rgba(15,0,0,0.85); justify-content: center; align-items: center;
+      padding: 24px; cursor: pointer;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img {
+      max-width: 100%; max-height: 100%; border-radius: 4px;
+      cursor: default; box-shadow: 0 4px 32px rgba(0,0,0,0.4);
+    }
     @media (max-width: 640px) {
       .hero-headline { font-size: 28px; }
       .section { padding: 32px 0; }
@@ -237,7 +248,7 @@
         <a href="#why">Why</a>
         <a href="#migration">Migration</a>
         <a href="#quickstart">Quick Start</a>
-        <a href="https://github.com/akashnikhra/LedgerMitra" class="btn-outline" style="gap:6px" 
+        <a href="https://github.com/akashnikhra/LedgerMitra" class="btn-outline" style="gap:6px">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
           GitHub
         </a>
@@ -397,6 +408,8 @@
     </div>
   </section>
 
+  <div class="lightbox" id="lightbox"><img src="" alt=""></div>
+
   <footer class="footer">
     <div class="container">
       <div class="footer-links">
@@ -430,6 +443,20 @@
 
 <script>
 ;(function() {
+  var lightbox = document.getElementById('lightbox');
+  var lightboxImg = lightbox.querySelector('img');
+
+  document.querySelectorAll('.screenshot-pill img').forEach(function(img) {
+    img.addEventListener('click', function(e) {
+      e.stopPropagation();
+      lightboxImg.src = this.src;
+      lightboxImg.alt = this.alt;
+      lightbox.classList.add('open');
+    });
+  });
+  lightbox.addEventListener('click', function() { this.classList.remove('open'); });
+  lightboxImg.addEventListener('click', function(e) { e.stopPropagation(); });
+
   var sections = document.querySelectorAll('.fade-in');
   var heroTui = document.querySelector('.parallax');
   var heroContent = document.querySelector('.parallax-content');
