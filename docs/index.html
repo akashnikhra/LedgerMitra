@@ -157,6 +157,12 @@
     .parallax { will-change: transform; }
     .parallax-content { will-change: transform; }
     .parallax-bg { will-change: transform; }
+    .parallax-item { will-change: transform; }
+    .parallax-bg-section {
+      position: absolute; inset: 0; opacity: 0.025; pointer-events: none;
+      background-image: radial-gradient(circle, #201d1d 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
     .card-hover { transition: border-color 0.3s, transform 0.3s; }
     .card-hover:hover { border-color: var(--ink); transform: translateY(-2px); }
     .footer-contact { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-bottom:12px; font-size:13px; }
@@ -275,35 +281,36 @@
     </div>
   </section>
 
-  <section class="section fade-in" id="features">
+  <section class="section fade-in" id="features" style="position:relative; overflow:hidden">
+    <div class="parallax-bg-section parallax-item" data-p="30"></div>
     <div class="container">
       <h2 class="section-heading">Features</h2>
 
       <div class="feature-row"><strong>[+] Invoicing</strong> — Create GST-ready sales invoices with line items, auto-numbering, and CGST/SGST/IGST support.</div>
-      <div class="screenshot-pill"><img src="assets/invoice-form.png" alt="Invoice Form" style="width:100%; max-width:720px"></div>
+      <div class="screenshot-pill parallax-item" data-p="40"><img src="assets/invoice-form.png" alt="Invoice Form" style="width:100%; max-width:720px"></div>
 
       <div class="feature-row"><strong>[+] Dashboard</strong> — KPI cards, monthly revenue trends, top debtors, invoice aging, and low stock alerts — all at a glance.</div>
-      <div class="screenshot-pill"><img src="assets/dashboard-light.png" alt="Dashboard" style="width:100%; max-width:720px"></div>
+      <div class="screenshot-pill parallax-item" data-p="40"><img src="assets/dashboard-light.png" alt="Dashboard" style="width:100%; max-width:720px"></div>
 
       <div class="feature-row"><strong>[+] Purchase Invoices</strong> — Record purchases with stock updates and ledger integration. Full GST support.</div>
 
       <div class="feature-row"><strong>[+] Receipts</strong> — Receive payments with auto-allocation to oldest outstanding invoices or manual per-invoice assignment.</div>
-      <div class="screenshot-pill"><img src="assets/receipt.png" alt="Receipt Entry" style="width:100%; max-width:720px"></div>
+      <div class="screenshot-pill parallax-item" data-p="40"><img src="assets/receipt.png" alt="Receipt Entry" style="width:100%; max-width:720px"></div>
 
       <div class="feature-row"><strong>[+] Ledger</strong> — Customer-wise and year-wise ledger with debit/credit columns, running balance, and date range filters.</div>
-      <div class="screenshot-pill"><img src="assets/ledger.png" alt="Ledger View" style="width:100%; max-width:720px"></div>
+      <div class="screenshot-pill parallax-item" data-p="40"><img src="assets/ledger.png" alt="Ledger View" style="width:100%; max-width:720px"></div>
 
       <div class="feature-row"><strong>[+] Products & Stock</strong> — SKU-based product catalog with rates, GST, HSN codes, stock tracking, and reorder alerts.</div>
 
       <div class="feature-row"><strong>[+] Customers & Suppliers</strong> — Party master management with opening balances, GSTIN, state, and full transaction history.</div>
 
       <div class="feature-row"><strong>[+] Legacy Import</strong> — Full migration engine from Speed Plus MDB/BMW files. Multi-FY detection, deduplication, audit logging.</div>
-      <div class="screenshot-pill"><img src="assets/legacy-import.png" alt="Legacy Import" style="width:100%; max-width:720px"></div>
+      <div class="screenshot-pill parallax-item" data-p="40"><img src="assets/legacy-import.png" alt="Legacy Import" style="width:100%; max-width:720px"></div>
 
       <div class="feature-row"><strong>[*] Private & Offline</strong> — Your financial data never leaves your machine. Single SQLite file. Backup by copying it.</div>
 
       <div class="feature-row"><strong>[+] WhatsApp Integration</strong> — Send invoice and receipt PDFs directly via WhatsApp Web with customizable message templates.</div>
-      <div class="screenshot-pill"><img src="assets/whatsapp.png" alt="WhatsApp Integration" style="width:100%; max-width:720px"></div>
+      <div class="screenshot-pill parallax-item" data-p="40"><img src="assets/whatsapp.png" alt="WhatsApp Integration" style="width:100%; max-width:720px"></div>
 
       <div class="feature-row"><strong>[+] Print & PDF</strong> — Invoice, receipt, and ledger printing with save-to-PDF.</div>
 
@@ -311,11 +318,12 @@
     </div>
   </section>
 
-  <section class="section fade-in" id="why">
+  <section class="section fade-in" id="why" style="position:relative; overflow:hidden">
+    <div class="parallax-bg-section parallax-item" data-p="30"></div>
     <div class="container">
       <h2 class="section-heading">Why LedgerMitra?</h2>
       <p style="color:var(--mute); text-align:center; margin-bottom:32px; font-size:14px">Modern accounting without the cloud — built for Windows, built for privacy.</p>
-      <div style="display:flex; flex-wrap:wrap; gap:16px; justify-content:center">
+      <div style="display:flex; flex-wrap:wrap; gap:16px; justify-content:center" class="parallax-item" data-p="20">
         <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">Offline-First</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">All data lives in a local SQLite database. No server, no cloud dependency, no monthly fees. Backup is a file copy.</p>
@@ -352,7 +360,8 @@
     </div>
   </section>
 
-  <section class="section fade-in" id="migration">
+  <section class="section fade-in" id="migration" style="position:relative; overflow:hidden">
+    <div class="parallax-bg-section parallax-item" data-p="30"></div>
     <div class="container">
       <h2 class="section-heading">Migration from Speed Plus</h2>
       <p style="color:var(--mute); margin-bottom:24px">
@@ -378,24 +387,24 @@
     </div>
   </section>
 
-  <section class="section fade-in" id="quickstart">
+  <section class="section fade-in" id="quickstart" style="position:relative; overflow:hidden">
+    <div class="parallax-bg-section parallax-item" data-p="30"></div>
     <div class="container">
       <h2 class="section-heading">Quick Start</h2>
-
-      <div class="snippet-pill">
+      <div class="snippet-pill parallax-item" data-p="20">
         <span class="snippet-num">1</span>
         <code>git clone https://github.com/akashnikhra/LedgerMitra.git</code>
       </div>
-      <div class="snippet-pill">
+      <div class="snippet-pill parallax-item" data-p="20">
         <span class="snippet-num">2</span>
         <code>cd LedgerMitra &amp;&amp; install.bat</code>
       </div>
-      <div class="snippet-pill">
+      <div class="snippet-pill parallax-item" data-p="20">
         <span class="snippet-num">3</span>
         <code>start.bat</code>
       </div>
 
-      <div style="background:var(--surface-card); border-radius:4px; padding:12px 16px; margin-top:16px">
+      <div style="background:var(--surface-card); border-radius:4px; padding:12px 16px; margin-top:16px" class="parallax-item" data-p="10">
         <p style="color:var(--mute); font-size:14px">Default login: <code style="background:var(--surface-soft); padding:2px 6px; border-radius:2px;">admin</code> / <code style="background:var(--surface-soft); padding:2px 6px; border-radius:2px;">admin123</code></p>
       </div>
     </div>
@@ -403,7 +412,7 @@
 
   <div class="lightbox" id="lightbox"><img src="" alt=""></div>
 
-  <footer class="footer">
+  <footer class="footer parallax-item" data-p="15">
     <div class="container">
       <div class="footer-links">
         <a href="https://github.com/akashnikhra/LedgerMitra">GitHub</a>
@@ -478,9 +487,16 @@
 
   function onScroll() {
     var sy = window.scrollY;
+    var wh = window.innerHeight;
     if (heroTui) heroTui.style.transform = 'translateY(' + (sy * 0.10) + 'px)';
     if (heroContent) heroContent.style.transform = 'translateY(' + (sy * 0.20) + 'px)';
     if (heroBg) heroBg.style.transform = 'translateY(' + (sy * 0.04) + 'px)';
+    document.querySelectorAll('.parallax-item').forEach(function(el) {
+      var speed = parseFloat(el.getAttribute('data-p')) || 20;
+      var rect = el.getBoundingClientRect();
+      var center = (rect.top + rect.height / 2 - wh / 2) / wh;
+      el.style.transform = 'translateY(' + (center * speed) + 'px)';
+    });
     ticking = false;
   }
 
