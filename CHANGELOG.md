@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.1.0 (2026-05-28)
+
+### Landing Page
+- **Hamburger nav** — Mobile nav links hidden behind a toggle button with animated X transition
+- **Screenshot lightbox** — Click screenshots to view full-size in a dark overlay
+- **Parallax depth** — Dot-grid backgrounds, floating screenshots, and staggered card animations across all sections
+- **Mobile responsiveness** — Three breakpoints (480/640/1024px) with proper nav, typography, and layout scaling
+- **Accessibility** — Visible nav toggle border, solid dropdown background, `prefers-reduced-motion` respected
+- **Copyright line** — Added © 2026 LedgerMitra footer credit
+
 ## v1.0.1 (2026-05-28)
 
 ### Bug Fixes
