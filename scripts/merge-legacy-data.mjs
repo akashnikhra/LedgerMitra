@@ -7,12 +7,13 @@ import initSqlJs from 'sql.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Accept --cwd and --data-dir arguments
+// Accept --cwd, --data-dir, and --output-dir arguments
 const cwdArg = process.argv.find(a => a.startsWith('--cwd='));
 const dataDirArg = process.argv.find(a => a.startsWith('--data-dir='));
+const outputDirArg = process.argv.find(a => a.startsWith('--output-dir='));
 const PROJECT_ROOT = cwdArg ? cwdArg.split('=')[1] : join(__dirname, '..');
 const DATA_DIR = dataDirArg ? dataDirArg.split('=')[1] : join(PROJECT_ROOT, 'Upload', 'Data');
-const OUTPUT_DIR = join(PROJECT_ROOT, 'Upload', 'Merged');
+const OUTPUT_DIR = outputDirArg ? outputDirArg.split('=')[1] : join(PROJECT_ROOT, 'Upload', 'Merged');
 const OUTPUT_PATH = join(OUTPUT_DIR, 'merged.db');
 
 function computeFileHash(filePath) {

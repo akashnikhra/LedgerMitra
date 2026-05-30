@@ -1,7 +1,7 @@
 import { ipcMain, BrowserWindow, dialog, app } from 'electron';
 import { spawn } from 'child_process';
 import { join } from 'path';
-import { statSync, existsSync } from 'fs';
+import { statSync, existsSync, mkdirSync } from 'fs';
 import { IPC_CHANNELS } from '@shared/constants';
 import { login, logout, changePassword } from './auth';
 import { getCurrentUser, getActiveFyId } from './session';
@@ -504,9 +504,16 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
     const envPath = process.env.LEDGERMITRA_LEGACY_DATA;
     const dataPath = settingsPath || envPath;
 
+    // Output merged DB to userData (writable), not inside app bundle
+    const mergeOutputDir = join(app.getPath('userData'), 'Upload', 'Merged');
+    if (!existsSync(mergeOutputDir)) {
+      mkdirSync(mergeOutputDir, { recursive: true });
+    }
+    const mergedDbPath = join(mergeOutputDir, 'merged.db');
+
     return new Promise((resolve) => {
       const output: string[] = [];
-      const args = [scriptPath, `--cwd=${cwd}`];
+      const args = [scriptPath, `--cwd=${cwd}`, `--output-dir=${mergeOutputDir}`];
       if (dataPath && existsSync(dataPath)) {
         args.push(`--data-dir=${dataPath}`);
       }
@@ -531,7 +538,6 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
       });
 
       child.on('close', (code) => {
-        const mergedDbPath = join(cwd, 'Upload', 'Merged', 'merged.db');
         let dbInfo: MergedDbInfo | { error: string } = { exists: false, sourceFiles: 0, totalLedger: 0, totalAccount: 0, totalItems: 0, totalInventory: 0, totalBillMaster: 0, fileSize: 0 };
         if (existsSync(mergedDbPath)) {
           dbInfo = checkMergedDb(mergedDbPath);
@@ -556,8 +562,8 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
     return importFromMergedDb(payload.dbPath, payload.companyId, { ...payload.options, dryRun: true });
   });
 
-  // Default merged DB path
+  // Default merged DB path (in userData, not app bundle)
   ipcMain.handle(IPC_CHANNELS['mdb:get-path'], () =>
-    join(__dirname, '..', '..', 'Upload', 'Merged', 'merged.db')
+    join(app.getPath('userData'), 'Upload', 'Merged', 'merged.db')
   );
 }
