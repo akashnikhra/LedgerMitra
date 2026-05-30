@@ -239,6 +239,39 @@ export async function initializeDatabase(dbPath?: string): Promise<void> {
       `INSERT INTO users (username, password_hash, password_hint) VALUES ('admin', ?, 'Default: admin123')`
     ).run(hash);
   }
+
+  // Migration: Create licenses table
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS licenses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        key TEXT NOT NULL,
+        hardware_id TEXT,
+        customer_name TEXT,
+        license_type TEXT NOT NULL DEFAULT 'perpetual',
+        activated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('[Migration] Created licenses table');
+  } catch (e) {
+    console.error('Migration error:', e);
+  }
+
+  // Migration: Create license_activations table
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS license_activations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        license_key TEXT NOT NULL,
+        hardware_id TEXT NOT NULL,
+        activated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(license_key, hardware_id)
+      )
+    `);
+    console.log('[Migration] Created license_activations table');
+  } catch (e) {
+    console.error('Migration error:', e);
+  }
 }
 
 export function closeDatabase(): void {

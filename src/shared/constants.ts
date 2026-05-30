@@ -98,5 +98,12 @@ export const IPC_CHANNELS = {
   'mdb:get-companies': 'mdb:get-companies',
   'mdb:create-fy': 'mdb:create-fy',
   'mdb:list-fy': 'mdb:list-fy',
-  'mdb:get-path': 'mdb:get-path'
+  'mdb:get-path': 'mdb:get-path',
+  // License
+  'license:verify': 'license:verify',
+  'license:activate': 'license:activate',
+  'license:status': 'license:status',
+  'license:trial-start': 'license:trial-start',
+  'license:features': 'license:features',
+  'feature:check': 'feature:check'
 } as const;

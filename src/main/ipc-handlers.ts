@@ -42,6 +42,13 @@ import {
 } from './mdb-import';
 import { getDatabasePath, closeDatabase, initializeDatabase } from './database';
 import { copyFileSync, existsSync } from 'fs';
+import {
+  verifyLicense,
+  activateLicense,
+  getLicenseStatus,
+  isPremiumFeature,
+  getPremiumFeatureList
+} from './license';
 
 export function setupIpcHandlers(_win: BrowserWindow | null): void {
   ipcMain.handle(IPC_CHANNELS['auth:login'], (_, { username, password }) =>
@@ -59,7 +66,14 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
 
   ipcMain.handle(IPC_CHANNELS['company:list'], () => getAllCompanies());
   ipcMain.handle(IPC_CHANNELS['company:get'], (_, id: number) => getCompany(id));
-  ipcMain.handle(IPC_CHANNELS['company:create'], (_, data) => createCompany(data));
+  ipcMain.handle(IPC_CHANNELS['company:create'], (_, data) => {
+    // Allow first company creation (setup), gate additional companies behind premium
+    const existingCompanies = getAllCompanies();
+    if (existingCompanies.length > 0 && !isPremiumFeature('multi_company')) {
+      return { success: false, error: 'Multi-Company is a premium feature. Upgrade at Settings > License.' };
+    }
+    return createCompany(data);
+  });
 
   ipcMain.handle(IPC_CHANNELS['fy:list'], (_, companyId: number) =>
     getAllFinancialYears(companyId)
@@ -244,8 +258,9 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
   ipcMain.handle(IPC_CHANNELS['ledger:by-invoice'], (_e, invoiceId) => ledger.getInvoiceLedger(invoiceId));
   ipcMain.handle(IPC_CHANNELS['ledger:summary'], (_e, fyId) => ledger.getLedgerSummary(fyId));
 
-  // Print
+  // Print (premium feature)
   ipcMain.handle(IPC_CHANNELS['print:invoice'], (_e, invoiceId: number) => {
+    if (!isPremiumFeature('print_pdf')) return '';
     const invoice = getInvoiceById(invoiceId);
     if (!invoice) return '';
     const items = getInvoiceItems(invoiceId);
@@ -262,6 +277,7 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
     return print.renderInvoiceTemplate({ invoice, items, company, customer, paymentSummary });
   });
   ipcMain.handle(IPC_CHANNELS['print:receipt'], (_e, receiptId: number) => {
+    if (!isPremiumFeature('print_pdf')) return '';
     const r = receipt.getReceipt(receiptId);
     if (!r) return '';
     const company = print.getCompanyInfo();
@@ -269,6 +285,7 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
     return print.renderReceiptTemplate({ receipt: r.receipt, allocations: r.allocations, company, customer });
   });
   ipcMain.handle(IPC_CHANNELS['print:ledger'], (_e, data: { customerId?: number; fyId?: number; entries?: unknown[]; summary?: unknown }) => {
+    if (!isPremiumFeature('print_pdf')) return '';
     const company = print.getCompanyInfo();
     const fy = data.fyId ? queryOne('SELECT * FROM financial_years WHERE id = ?', [data.fyId]) : null;
     const customer = data.customerId ? getCustomerById(data.customerId) : null;
@@ -284,6 +301,7 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
     });
   });
   ipcMain.handle(IPC_CHANNELS['print:save-pdf-dialog'], async (_e, { html, defaultName }) => {
+    if (!isPremiumFeature('print_pdf')) return { success: false, error: 'Premium feature. Upgrade at Settings > License.' };
     const { dialog } = await import('electron');
     const result = await dialog.showSaveDialog({
       title: 'Save PDF',
@@ -306,8 +324,19 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
     return { success: true };
   });
 
-  // Backup: Export database to user-chosen location
+  // License
+  ipcMain.handle(IPC_CHANNELS['license:verify'], (_, key: string) => verifyLicense(key));
+  ipcMain.handle(IPC_CHANNELS['license:activate'], (_, key: string) => activateLicense(key));
+  ipcMain.handle(IPC_CHANNELS['license:status'], () => getLicenseStatus());
+  ipcMain.handle(IPC_CHANNELS['license:trial-start'], () => getLicenseStatus());
+  ipcMain.handle(IPC_CHANNELS['license:features'], () => getPremiumFeatureList());
+  ipcMain.handle(IPC_CHANNELS['feature:check'], (_, feature: string) => ({
+    available: isPremiumFeature(feature)
+  }));
+
+  // Backup: Export database to user-chosen location (premium feature)
   ipcMain.handle(IPC_CHANNELS['backup:export'], async () => {
+    if (!isPremiumFeature('backup')) return { success: false, error: 'Premium feature. Upgrade at Settings > License.' };
     const result = await dialog.showSaveDialog({
       title: 'Export Database Backup',
       defaultPath: `ledgermitra-backup-${new Date().toISOString().split('T')[0]}.db`,
@@ -323,8 +352,9 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
     }
   });
 
-  // Backup: Import database from backup file (requires restart)
+  // Backup: Import database from backup file (requires restart, premium feature)
   ipcMain.handle(IPC_CHANNELS['backup:import'], async () => {
+    if (!isPremiumFeature('backup')) return { success: false, error: 'Premium feature. Upgrade at Settings > License.' };
     const result = await dialog.showOpenDialog({
       title: 'Import Database Backup',
       filters: [{ name: 'Database', extensions: ['db'] }],
@@ -352,21 +382,36 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
     }
   });
 
-  // WhatsApp
-  ipcMain.handle(IPC_CHANNELS['whatsapp:status'], () => whatsapp.getWhatsAppStatus());
-  ipcMain.handle(IPC_CHANNELS['whatsapp:reconnect'], () => whatsapp.reconnectWhatsApp());
-  ipcMain.handle(IPC_CHANNELS['whatsapp:disconnect'], () => whatsapp.disconnectWhatsApp());
-  ipcMain.handle(IPC_CHANNELS['whatsapp:send'], (_, data) => whatsapp.sendWhatsAppDocument(data));
+  // WhatsApp (premium feature)
+  ipcMain.handle(IPC_CHANNELS['whatsapp:status'], () => {
+    if (!isPremiumFeature('whatsapp')) return { status: 'premium_required', message: 'WhatsApp is a premium feature. Upgrade at Settings > License.' };
+    return whatsapp.getWhatsAppStatus();
+  });
+  ipcMain.handle(IPC_CHANNELS['whatsapp:reconnect'], () => {
+    if (!isPremiumFeature('whatsapp')) return { success: false, error: 'Premium feature. Upgrade at Settings > License.' };
+    return whatsapp.reconnectWhatsApp();
+  });
+  ipcMain.handle(IPC_CHANNELS['whatsapp:disconnect'], () => {
+    if (!isPremiumFeature('whatsapp')) return { success: false, error: 'Premium feature. Upgrade at Settings > License.' };
+    return whatsapp.disconnectWhatsApp();
+  });
+  ipcMain.handle(IPC_CHANNELS['whatsapp:send'], (_, data) => {
+    if (!isPremiumFeature('whatsapp')) return { success: false, error: 'Premium feature. Upgrade at Settings > License.' };
+    return whatsapp.sendWhatsAppDocument(data);
+  });
 
-  // Multi-FY MDB Import
-  ipcMain.handle(IPC_CHANNELS['mdb:check-import-status'], (_, { filePath }) =>
-    checkFileImportStatus(filePath)
-  );
-  ipcMain.handle(IPC_CHANNELS['mdb:analyze-fys'], (_, { filePath, password }) =>
-    analyzeDetectedFYs(filePath, password)
-  );
-  ipcMain.handle(IPC_CHANNELS['mdb:import-fy'], async (_, { filePath, password, companyId, fyName, fyStartDate, fyEndDate, options }) =>
-    importFromMdb(filePath, password, {
+  // Multi-FY MDB Import (premium feature)
+  ipcMain.handle(IPC_CHANNELS['mdb:check-import-status'], (_, { filePath }) => {
+    if (!isPremiumFeature('legacy_import')) return { error: 'Premium feature. Upgrade at Settings > License.' };
+    return checkFileImportStatus(filePath);
+  });
+  ipcMain.handle(IPC_CHANNELS['mdb:analyze-fys'], (_, { filePath, password }) => {
+    if (!isPremiumFeature('legacy_import')) return { error: 'Premium feature. Upgrade at Settings > License.' };
+    return analyzeDetectedFYs(filePath, password);
+  });
+  ipcMain.handle(IPC_CHANNELS['mdb:import-fy'], async (_, { filePath, password, companyId, fyName, fyStartDate, fyEndDate, options }) => {
+    if (!isPremiumFeature('legacy_import')) return { success: false, error: 'Premium feature. Upgrade at Settings > License.' };
+    return importFromMdb(filePath, password, {
       companyId,
       selectedFYs: [{ name: fyName, startDate: fyStartDate, endDate: fyEndDate, mode: options.mode }],
       importProducts: options.importProducts ?? true,
@@ -374,11 +419,12 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
       importInvoices: options.importInvoices ?? true,
       importLedger: options.importLedger ?? true,
       importOpeningBalances: options.importOpeningBalances ?? true
-    })
-  );
-  ipcMain.handle(IPC_CHANNELS['import:list-logs'], (_, { companyId }) =>
-    listImportLogs(companyId)
-  );
+    });
+  });
+  ipcMain.handle(IPC_CHANNELS['import:list-logs'], (_, { companyId }) => {
+    if (!isPremiumFeature('legacy_import')) return [];
+    return listImportLogs(companyId);
+  });
 
   // Balance Trace
   ipcMain.handle(IPC_CHANNELS['trace:customer-balance'], (_, { customerId, companyId }) =>
@@ -403,11 +449,13 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
     });
   });
 
-  // Merged DB Import
-  ipcMain.handle(IPC_CHANNELS['mdb:check-merged-db'], (_, { dbPath }) =>
-    checkMergedDb(dbPath)
-  );
+  // Merged DB Import (premium feature)
+  ipcMain.handle(IPC_CHANNELS['mdb:check-merged-db'], (_, { dbPath }) => {
+    if (!isPremiumFeature('legacy_import')) return { error: 'Premium feature. Upgrade at Settings > License.' };
+    return checkMergedDb(dbPath);
+  });
   ipcMain.handle(IPC_CHANNELS['mdb:import-merged'], async (_, payload) => {
+    if (!isPremiumFeature('legacy_import')) return { success: false, error: 'Premium feature. Upgrade at Settings > License.' };
     const result = await importFromMergedDb(payload.dbPath, payload.companyId, payload.options);
     if (result.success && !result.dryRun) {
       executeWrite(

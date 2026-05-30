@@ -10,6 +10,9 @@ import PurchaseInvoicesPanel from './PurchaseInvoicesPanel';
 import ProductsPanel from './ProductsPanel';
 import ReceiptsPanel from './ReceiptsPanel';
 import LedgerPanel from './LedgerPanel';
+import LicenseActivation from './LicenseActivation';
+import LicenseStatus from './LicenseStatus';
+import PremiumBadge from './PremiumBadge';
 
 type Tab = 'home' | 'import' | 'products' | 'customers' | 'invoices' | 'suppliers' | 'purchases' | 'receipts' | 'ledger' | 'settings';
 
@@ -60,6 +63,12 @@ export default function Dashboard({ company, onSignOut, onChangeWorkspace }: Pro
   const [activeFy, setActiveFy] = useState<FinancialYear | null>(null);
   const [pendingInvoiceId, setPendingInvoiceId] = useState<number | null>(null);
   const { theme, toggleTheme } = useTheme();
+  const [showLicenseModal, setShowLicenseModal] = useState(false);
+  const [licenseStatus, setLicenseStatus] = useState<any>(null);
+
+  useEffect(() => {
+    window.electronAPI.getLicenseStatus().then(setLicenseStatus);
+  }, []);
 
   async function refresh() {
     const data = await window.electronAPI.getDashboardInsights();
@@ -77,9 +86,9 @@ export default function Dashboard({ company, onSignOut, onChangeWorkspace }: Pro
     }
   }, [tab, company?.id]);
 
-  const nav: { id: Tab; label: string }[] = [
+  const nav: { id: Tab; label: string; premium?: string }[] = [
     { id: 'home', label: 'Dashboard' },
-    { id: 'import', label: 'Legacy import' },
+    { id: 'import', label: 'Legacy import', premium: 'legacy_import' },
     { id: 'products', label: 'Products' },
     { id: 'customers', label: 'Customers' },
     { id: 'invoices', label: 'Sales Invoices' },
@@ -129,6 +138,9 @@ export default function Dashboard({ company, onSignOut, onChangeWorkspace }: Pro
           {nav.map((n) => (
             <button key={n.id} className={`nav-btn ${tab === n.id ? 'active' : ''}`} onClick={() => setTab(n.id)}>
               {n.label}
+              {n.premium && licenseStatus && !licenseStatus.valid && (
+                <PremiumBadge compact />
+              )}
             </button>
           ))}
           <button className="nav-btn" onClick={onChangeWorkspace}>Change company / FY</button>
@@ -314,7 +326,12 @@ export default function Dashboard({ company, onSignOut, onChangeWorkspace }: Pro
           </div>
         )}
         {tab === 'import' && <LegacyImportWizard />}
-        {tab === 'settings' && <Settings />}
+        {tab === 'settings' && (
+          <div>
+            <LicenseStatus onActivate={() => setShowLicenseModal(true)} />
+            <Settings />
+          </div>
+        )}
         {tab === 'products' && <ProductsPanel onChanged={refresh} />}
         {tab === 'customers' && <CustomersPanel onChanged={refresh} />}
         {tab === 'invoices' && <InvoicesPanel onChanged={refresh} initialInvoiceId={pendingInvoiceId} onClearInvoiceId={() => setPendingInvoiceId(null)} />}
@@ -323,6 +340,15 @@ export default function Dashboard({ company, onSignOut, onChangeWorkspace }: Pro
         {tab === 'receipts' && <ReceiptsPanel onChanged={refresh} />}
         {tab === 'ledger' && <LedgerPanel onChanged={refresh} activeFY={activeFy} companyId={company?.id} />}
       </main>
+
+      {showLicenseModal && (
+        <LicenseActivation
+          onClose={() => setShowLicenseModal(false)}
+          onActivated={() => {
+            window.electronAPI.getLicenseStatus().then(setLicenseStatus);
+          }}
+        />
+      )}
     </div>
   );
 }

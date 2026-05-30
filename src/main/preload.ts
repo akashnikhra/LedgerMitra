@@ -144,5 +144,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   whatsappDisconnect: () => ipcRenderer.invoke(IPC_CHANNELS['whatsapp:disconnect']),
   whatsappSend: (data: unknown) => ipcRenderer.invoke(IPC_CHANNELS['whatsapp:send'], data),
   onWhatsAppStatus: (cb: (data: unknown) => void) => ipcRenderer.on('whatsapp:status', (_, data) => cb(data)),
-  onWhatsAppQr: (cb: (data: unknown) => void) => ipcRenderer.on('whatsapp:qr', (_, data) => cb(data))
+  onWhatsAppQr: (cb: (data: unknown) => void) => ipcRenderer.on('whatsapp:qr', (_, data) => cb(data)),
+
+  // License
+  verifyLicense: (key: string) => ipcRenderer.invoke(IPC_CHANNELS['license:verify'], key),
+  activateLicense: (key: string) => ipcRenderer.invoke(IPC_CHANNELS['license:activate'], key),
+  getLicenseStatus: () => ipcRenderer.invoke(IPC_CHANNELS['license:status']),
+  startTrial: () => ipcRenderer.invoke(IPC_CHANNELS['license:trial-start']),
+  getPremiumFeatures: () => ipcRenderer.invoke(IPC_CHANNELS['license:features']),
+  checkFeature: (feature: string) => ipcRenderer.invoke(IPC_CHANNELS['feature:check'], feature)
 });
