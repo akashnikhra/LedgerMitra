@@ -151,9 +151,9 @@ LedgerMitra uses a **free + premium** model:
 
 | License Type | Price | Includes |
 |-------------|-------|----------|
-| Free | ?0 | Core features |
-| Premium Perpetual | ?4,999 one-time | All features + 1 year updates |
-| Premium Yearly | ?1,999/year | All features + all updates + priority support |
+| Free | ₹0 | Core features |
+| Premium Perpetual | ₹4,999 one-time | All features + 1 year updates |
+| Premium Yearly | ₹1,999/year | All features + all updates + priority support |
 
 ### For Customers
 
@@ -180,7 +180,7 @@ The license key is signed with RSA-2048 and validated offline. Private key stays
 - [npm](https://www.npmjs.com/) v9 or later
 - [Git](https://git-scm.com/)
 
-> **New to development?** Run `setup.bat` � it checks for all dependencies and installs any that are missing.
+> **New to development?** Run `setup.bat` — it checks for all dependencies and installs any that are missing.
 
 ### Installation
 
