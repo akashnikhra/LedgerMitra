@@ -379,7 +379,7 @@ export default function Settings({ onShowLicense }: SettingsProps) {
       </div>
 
       <div className="card">
-        <h3 style={{ fontSize: '1rem', marginBottom: '1rem' }}>WhatsApp{PREMIUM_BADGE}</h3>
+        <h3 style={{ fontSize: '1rem', marginBottom: '1rem' }}>WhatsApp{!licenseStatus?.valid && PREMIUM_BADGE}</h3>
         <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '1rem' }}>
           Connect WhatsApp to send invoices, receipts, and ledgers directly to customers.
         </p>
@@ -439,7 +439,7 @@ export default function Settings({ onShowLicense }: SettingsProps) {
       </div>
 
       <div className="card">
-        <h3 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Database backup{PREMIUM_BADGE}</h3>
+        <h3 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Database backup{!licenseStatus?.valid && PREMIUM_BADGE}</h3>
         {backupError && <div className="alert alert-error">{backupError}</div>}
         {backupStatus && <div className="alert alert-success">{backupStatus}</div>}
         <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '1rem' }}>
@@ -458,7 +458,7 @@ export default function Settings({ onShowLicense }: SettingsProps) {
 
       {/* Legacy Merge & Import */}
       <div className="card">
-        <h3 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Legacy data merge & import{PREMIUM_BADGE}</h3>
+        <h3 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Legacy data merge & import{!licenseStatus?.valid && PREMIUM_BADGE}</h3>
 
         {mergedInfo && mergedInfo.exists && (
           <div style={{ fontSize: '0.85rem', marginBottom: '1rem', color: 'var(--muted)' }}>
