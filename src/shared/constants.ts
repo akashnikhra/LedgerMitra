@@ -105,5 +105,7 @@ export const IPC_CHANNELS = {
   'license:status': 'license:status',
   'license:trial-start': 'license:trial-start',
   'license:features': 'license:features',
+  'license:reset-activations': 'license:reset-activations',
+  'license:deactivate': 'license:deactivate',
   'feature:check': 'feature:check'
 } as const;

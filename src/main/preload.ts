@@ -152,5 +152,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getLicenseStatus: () => ipcRenderer.invoke(IPC_CHANNELS['license:status']),
   startTrial: () => ipcRenderer.invoke(IPC_CHANNELS['license:trial-start']),
   getPremiumFeatures: () => ipcRenderer.invoke(IPC_CHANNELS['license:features']),
+  resetActivations: () => ipcRenderer.invoke(IPC_CHANNELS['license:reset-activations']),
+  deactivateLicense: () => ipcRenderer.invoke(IPC_CHANNELS['license:deactivate']),
   checkFeature: (feature: string) => ipcRenderer.invoke(IPC_CHANNELS['feature:check'], feature)
 });

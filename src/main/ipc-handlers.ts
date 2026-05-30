@@ -47,7 +47,9 @@ import {
   activateLicense,
   getLicenseStatus,
   isPremiumFeature,
-  getPremiumFeatureList
+  getPremiumFeatureList,
+  resetActivations,
+  deactivateLicense
 } from './license';
 
 export function setupIpcHandlers(_win: BrowserWindow | null): void {
@@ -330,6 +332,8 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
   ipcMain.handle(IPC_CHANNELS['license:status'], () => getLicenseStatus());
   ipcMain.handle(IPC_CHANNELS['license:trial-start'], () => getLicenseStatus());
   ipcMain.handle(IPC_CHANNELS['license:features'], () => getPremiumFeatureList());
+  ipcMain.handle(IPC_CHANNELS['license:reset-activations'], () => resetActivations());
+  ipcMain.handle(IPC_CHANNELS['license:deactivate'], () => deactivateLicense());
   ipcMain.handle(IPC_CHANNELS['feature:check'], (_, feature: string) => ({
     available: isPremiumFeature(feature)
   }));

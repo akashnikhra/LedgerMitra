@@ -288,3 +288,24 @@ export function getPremiumFeatureList(): Array<{ id: string; name: string; descr
     { id: 'print_pdf', name: 'Print & PDF', description: 'Print and save documents as PDF' }
   ];
 }
+
+// Reset all activations for a license key (developer support tool)
+export function resetActivations(): { success: boolean; error?: string } {
+  try {
+    executeWrite('DELETE FROM license_activations');
+    executeWrite('DELETE FROM licenses');
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: (e as Error).message };
+  }
+}
+
+// Deactivate current license (remove stored license)
+export function deactivateLicense(): { success: boolean; error?: string } {
+  try {
+    executeWrite('DELETE FROM licenses');
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: (e as Error).message };
+  }
+}
