@@ -22,3 +22,6 @@ Thumbs.db
 .DS_Store
 
 # Visual companion artifacts.superpowers/
+
+# License private key (NEVER commit)
+scripts/keys/private.pem
