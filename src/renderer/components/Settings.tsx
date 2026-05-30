@@ -1,6 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
 
-export default function Settings() {
+interface SettingsProps {
+  onShowLicense?: () => void;
+}
+
+export default function Settings({ onShowLicense }: SettingsProps) {
   const [username, setUsername] = useState('admin');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -264,6 +268,25 @@ export default function Settings() {
   return (
     <div>
       <h2 style={{ marginBottom: '0.5rem' }}>Settings</h2>
+
+      {/* License Section */}
+      <div style={{
+        border: '1px solid var(--hairline)', borderRadius: 4,
+        padding: 16, marginBottom: 16
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>License</h3>
+            <p style={{ fontSize: 13, color: 'var(--muted)' }}>
+              Manage your license key and view premium feature status.
+            </p>
+          </div>
+          <button className="btn" onClick={onShowLicense} style={{ fontSize: 13, padding: '4px 16px' }}>
+            Manage License
+          </button>
+        </div>
+      </div>
+
       <p style={{ color: 'var(--muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
         Change the login password for this computer. Default on first install is <code>admin123</code>.
       </p>

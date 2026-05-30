@@ -11,7 +11,6 @@ import ProductsPanel from './ProductsPanel';
 import ReceiptsPanel from './ReceiptsPanel';
 import LedgerPanel from './LedgerPanel';
 import LicenseActivation from './LicenseActivation';
-import LicenseStatus from './LicenseStatus';
 import PremiumBadge from './PremiumBadge';
 
 type Tab = 'home' | 'import' | 'products' | 'customers' | 'invoices' | 'suppliers' | 'purchases' | 'receipts' | 'ledger' | 'settings';
@@ -326,12 +325,7 @@ export default function Dashboard({ company, onSignOut, onChangeWorkspace }: Pro
           </div>
         )}
         {tab === 'import' && <LegacyImportWizard />}
-        {tab === 'settings' && (
-          <div>
-            <LicenseStatus onActivate={() => setShowLicenseModal(true)} />
-            <Settings />
-          </div>
-        )}
+        {tab === 'settings' && <Settings onShowLicense={() => setShowLicenseModal(true)} />}
         {tab === 'products' && <ProductsPanel onChanged={refresh} />}
         {tab === 'customers' && <CustomersPanel onChanged={refresh} />}
         {tab === 'invoices' && <InvoicesPanel onChanged={refresh} initialInvoiceId={pendingInvoiceId} onClearInvoiceId={() => setPendingInvoiceId(null)} />}
