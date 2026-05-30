@@ -38,19 +38,25 @@ function createWindow() {
 app.whenReady().then(async () => {
   await initializeDatabase(getDatabasePath());
 
-  // Check license status on startup
-  const licenseStatus = getLicenseStatus();
-  if (licenseStatus.type === 'trial' && licenseStatus.trialDaysLeft === 0) {
-    console.log('[License] Trial expired - premium features disabled');
-  } else if (licenseStatus.valid) {
-    console.log(`[License] Active: ${licenseStatus.type} - ${licenseStatus.customer}`);
-  } else {
-    console.log(`[License] Trial: ${licenseStatus.trialDaysLeft} days remaining`);
-  }
-
   createWindow();
   setupIpcHandlers(mainWindow);
   initWhatsApp(mainWindow!);
+
+  // Check license status on startup (non-blocking)
+  setTimeout(() => {
+    try {
+      const licenseStatus = getLicenseStatus();
+      if (licenseStatus.type === 'trial' && licenseStatus.trialDaysLeft === 0) {
+        console.log('[License] Trial expired - premium features disabled');
+      } else if (licenseStatus.valid) {
+        console.log(`[License] Active: ${licenseStatus.type} - ${licenseStatus.customer}`);
+      } else {
+        console.log(`[License] Trial: ${licenseStatus.trialDaysLeft} days remaining`);
+      }
+    } catch (e) {
+      console.error('[License] Error checking status:', e);
+    }
+  }, 1000);
 });
 
 app.on('window-all-closed', () => {

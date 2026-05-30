@@ -1,53 +1,75 @@
-import { execSync } from 'child_process';
 import { createHash } from 'crypto';
+import { execSync } from 'child_process';
+import { networkInterfaces } from 'os';
 
-function wmiQuery(property: string, wmiClass: string): string {
+let cachedHardwareId: string | null = null;
+
+function getMacAddress(): string {
+  const interfaces = networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name] || []) {
+      if (!iface.internal && iface.mac && iface.mac !== '00:00:00:00:00:00') {
+        return iface.mac;
+      }
+    }
+  }
+  return '';
+}
+
+function getWmicValue(query: string): string {
   try {
-    const result = execSync(
-      `powershell -Command "(Get-WmiObject ${wmiClass}).${property}"`,
-      { timeout: 5000, windowsHide: true }
-    ).toString().trim();
-    return result.split('\r\n')[0].trim();
+    const result = execSync(`wmic ${query}`, {
+      timeout: 3000,
+      windowsHide: true,
+      stdio: ['pipe', 'pipe', 'pipe']
+    }).toString().trim();
+    // Skip header line, get first data line
+    const lines = result.split('\r\n').filter(l => l.trim());
+    return lines.length > 1 ? lines[1].trim() : '';
   } catch {
     return '';
   }
 }
 
 export function generateHardwareId(): string {
+  if (cachedHardwareId) return cachedHardwareId;
+
   const parts: string[] = [];
 
-  // Motherboard serial
-  const boardSerial = wmiQuery('SerialNumber', 'Win32_BaseBoard');
-  if (boardSerial) parts.push(`board:${boardSerial}`);
+  // Fast: environment variables (instant)
+  const computerName = process.env.COMPUTERNAME || '';
+  const username = process.env.USERNAME || '';
+  const processorId = process.env.PROCESSOR_IDENTIFIER || '';
 
-  // CPU processor ID
-  const cpuId = wmiQuery('ProcessorId', 'Win32_Processor');
-  if (cpuId) parts.push(`cpu:${cpuId}`);
+  if (computerName) parts.push(`host:${computerName}`);
+  if (username) parts.push(`user:${username}`);
 
-  // System UUID
-  const uuid = wmiQuery('UUID', 'Win32_ComputerSystemProduct');
-  if (uuid) parts.push(`uuid:${uuid}`);
+  // Medium: MAC address (fast)
+  const mac = getMacAddress();
+  if (mac) parts.push(`mac:${mac}`);
 
-  // BIOS serial
-  const biosSerial = wmiQuery('SerialNumber', 'Win32_BIOS');
-  if (biosSerial) parts.push(`bios:${biosSerial}`);
+  // Slow: WMI queries (only if we need more entropy)
+  if (parts.length < 2) {
+    const boardSerial = getWmicValue('baseboard get serialnumber');
+    if (boardSerial) parts.push(`board:${boardSerial}`);
 
-  if (parts.length === 0) {
-    // Fallback: use hostname + username
-    const hostname = process.env.COMPUTERNAME || 'unknown';
-    const username = process.env.USERNAME || 'unknown';
-    parts.push(`host:${hostname}`);
-    parts.push(`user:${username}`);
+    const biosSerial = getWmicValue('bios get serialnumber');
+    if (biosSerial) parts.push(`bios:${biosSerial}`);
   }
 
-  return createHash('sha256').update(parts.join('|')).digest('hex').substring(0, 16);
+  if (parts.length === 0) {
+    parts.push('fallback:default');
+  }
+
+  cachedHardwareId = createHash('sha256').update(parts.join('|')).digest('hex').substring(0, 16);
+  return cachedHardwareId;
 }
 
 export function getHardwareInfo(): { boardSerial: string; cpuId: string; uuid: string; biosSerial: string } {
   return {
-    boardSerial: wmiQuery('SerialNumber', 'Win32_BaseBoard'),
-    cpuId: wmiQuery('ProcessorId', 'Win32_Processor'),
-    uuid: wmiQuery('UUID', 'Win32_ComputerSystemProduct'),
-    biosSerial: wmiQuery('SerialNumber', 'Win32_BIOS')
+    boardSerial: getWmicValue('baseboard get serialnumber'),
+    cpuId: getWmicValue('cpu get processorid'),
+    uuid: getWmicValue('csproduct get uuid'),
+    biosSerial: getWmicValue('bios get serialnumber')
   };
 }
