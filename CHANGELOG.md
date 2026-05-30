@@ -1,16 +1,25 @@
 # Changelog
 
+## v1.2.1 (2026-05-30)
+
+### License Management CLI
+- **`--list`** â€” List all licenses on the machine with status, activations, and expiry
+- **`--search <query>`** â€” Search licenses by customer name, email, or partial key
+- **`--export`** â€” Export all licenses to CSV for developer record-keeping
+- **`--help`** â€” Updated help with lost key recovery guidance
+- **Lost key recovery** â€” Three scenarios documented: customer has key, customer remembers name, customer remembers nothing
+
 ## v1.2.0 (2026-05-30)
 
 ### Licensing System
-- **Offline RSA-2048 validation** — License keys verified locally, no internet required
-- **30-day trial** — All features unlocked on first launch
-- **Feature gating** — Premium features locked after trial: WhatsApp, Legacy Import, Multi-Company, Backup, Print/PDF
-- **Hardware binding** — Licenses tied to machine fingerprint, N activations allowed
-- **License generator CLI** — `npx tsx scripts/license-gen.ts` for creating customer keys
-- **Activation UI** — Settings > License modal for entering keys
-- **Premium badges** — PRO indicators on locked sidebar tabs
-- **Startup check** — License status logged on app launch
+- **Offline RSA-2048 validation** ï¿½ License keys verified locally, no internet required
+- **30-day trial** ï¿½ All features unlocked on first launch
+- **Feature gating** ï¿½ Premium features locked after trial: WhatsApp, Legacy Import, Multi-Company, Backup, Print/PDF
+- **Hardware binding** ï¿½ Licenses tied to machine fingerprint, N activations allowed
+- **License generator CLI** ï¿½ `npx tsx scripts/license-gen.ts` for creating customer keys
+- **Activation UI** ï¿½ Settings > License modal for entering keys
+- **Premium badges** ï¿½ PRO indicators on locked sidebar tabs
+- **Startup check** ï¿½ License status logged on app launch
 
 ### Database
 - Added `licenses` table for storing activated keys
@@ -19,7 +28,7 @@
 ## v1.1.0 (2026-05-28)
 
 ### New
-- **`setup.bat`** — Automatic dependency checker and installer for new users. Checks for Node.js v18+, npm v9+, and Git, then downloads and installs any missing dependencies with user permission before running project setup.
+- **`setup.bat`** ï¿½ Automatic dependency checker and installer for new users. Checks for Node.js v18+, npm v9+, and Git, then downloads and installs any missing dependencies with user permission before running project setup.
 
 ### Landing Page
 - **Hamburger nav** â€” Mobile nav links hidden behind a toggle button with animated X transition

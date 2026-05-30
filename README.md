@@ -14,6 +14,7 @@
     <a href="#tech-stack">Tech Stack</a> •
     <a href="#getting-started">Getting Started</a> •
     <a href="#usage">Usage</a> •
+    <a href="#developer-tools">Developer Tools</a> •
     <a href="#migration">Speed Plus Migration</a>
   </p>
   <br/>
@@ -274,8 +275,9 @@ LedgerMitra/
 ├── docs/
 │   └── LEGACY_DATA_MAP.md      # Field-level mapping reference
 ├── scripts/
-│   ├── merge-legacy-data.mjs   # Merge multiple MDBs into one DB
-│   └── patch-mdb-reader.mjs    # Post-install native module patch
+│   ├── license-gen.ts             # License key generator & manager
+│   ├── merge-legacy-data.mjs      # Merge multiple MDBs into one DB
+│   └── patch-mdb-reader.mjs       # Post-install native module patch
 ├── src/
 │   ├── main/                   # Electron main process
 │   │   ├── main.ts             # App entry, window creation
@@ -313,6 +315,30 @@ LedgerMitra/
 ├── install.bat
 └── start.bat
 ```
+
+## Developer Tools
+
+### License Key Generator
+
+Manage customer licenses from the command line:
+
+```bash
+npx tsx scripts/license-gen.ts                 # Generate new key
+npx tsx scripts/license-gen.ts --regenerate    # Regenerate lost key
+npx tsx scripts/license-gen.ts --verify <key>  # Verify a key
+npx tsx scripts/license-gen.ts --list          # List all licenses
+npx tsx scripts/license-gen.ts --search <q>    # Search by name or key
+npx tsx scripts/license-gen.ts --export        # Export licenses to CSV
+```
+
+**Lost key recovery:**
+- Customer has old key → `--regenerate` (paste old key, get same key back)
+- Customer remembers name → `--search "name"` to find their key
+- Customer remembers nothing → check your CSV export or generate a new key
+
+**Best practice:** Run `--export` monthly. Keep the CSV as your sales record.
+
+> See [scripts/keys/](scripts/keys/) for RSA key pair (private.pem is gitignored).
 
 ## Configuration
 
