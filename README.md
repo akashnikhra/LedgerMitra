@@ -137,23 +137,31 @@ Light & dark theme variants:
 
 ### Prerequisites
 
+- Windows 10 or later
 - [Node.js](https://nodejs.org/) v18 or later
 - [npm](https://www.npmjs.com/) v9 or later
-- Windows (other platforms: not yet tested)
+- [Git](https://git-scm.com/)
+
+> **New to development?** Run `setup.bat` — it checks for all dependencies and installs any that are missing.
 
 ### Installation
+
+**Automatic (recommended for new users):**
+
+```bat
+git clone https://github.com/akashnikhra/LedgerMitra.git
+cd LedgerMitra
+setup.bat
+```
+
+`setup.bat` checks for Node.js, npm, and Git. If anything is missing, it downloads and installs it with your permission, then runs `install.bat` to install project dependencies.
+
+**Manual:**
 
 ```bat
 git clone https://github.com/akashnikhra/LedgerMitra.git
 cd LedgerMitra
 install.bat
-```
-
-Or manually:
-
-```bat
-npm install --legacy-peer-deps
-npm run rebuild:native
 ```
 
 ### Development

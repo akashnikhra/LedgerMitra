@@ -2,6 +2,9 @@
 
 ## v1.1.0 (2026-05-28)
 
+### New
+- **`setup.bat`** � Automatic dependency checker and installer for new users. Checks for Node.js v18+, npm v9+, and Git, then downloads and installs any missing dependencies with user permission before running project setup.
+
 ### Landing Page
 - **Hamburger nav** — Mobile nav links hidden behind a toggle button with animated X transition
 - **Screenshot lightbox** — Click screenshots to view full-size in a dark overlay
