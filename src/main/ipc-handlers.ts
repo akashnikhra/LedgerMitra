@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow, dialog } from 'electron';
+import { ipcMain, BrowserWindow, dialog, app } from 'electron';
 import { spawn } from 'child_process';
 import { join } from 'path';
 import { statSync, existsSync } from 'fs';
@@ -481,8 +481,19 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
 
   // Run legacy merge script
   ipcMain.handle(IPC_CHANNELS['mdb:run-merge'], async (event) => {
-    const scriptPath = join(__dirname, '..', '..', 'scripts', 'merge-legacy-data.mjs');
-    const cwd = join(__dirname, '..', '..');
+    let scriptPath: string;
+    let cwd: string;
+
+    if (app.isPackaged) {
+      // In packaged mode, script is unpacked next to the asar
+      const resourcesPath = process.resourcesPath;
+      scriptPath = join(resourcesPath, 'scripts', 'merge-legacy-data.mjs');
+      cwd = join(resourcesPath);
+    } else {
+      // In dev mode, script is in the project root
+      scriptPath = join(__dirname, '..', '..', 'scripts', 'merge-legacy-data.mjs');
+      cwd = join(__dirname, '..', '..');
+    }
 
     if (!existsSync(scriptPath)) {
       return { success: false, error: `Merge script not found at ${scriptPath}` };
@@ -490,7 +501,8 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
 
     return new Promise((resolve) => {
       const output: string[] = [];
-      const child = spawn('node', [scriptPath], { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
+      const args = [scriptPath, `--cwd=${cwd}`];
+      const child = spawn('node', args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
 
       child.stdout.on('data', (data: Buffer) => {
         const lines = data.toString().split('\n').filter(Boolean);

@@ -46,7 +46,11 @@
     "files": [
       "dist/**/*",
       "database/**/*",
+      "scripts/merge-legacy-data.mjs",
       "package.json"
+    ],
+    "asarUnpack": [
+      "scripts/merge-legacy-data.mjs"
     ],
     "win": {
       "target": "nsis"

@@ -6,7 +6,10 @@ import MDBReader from 'mdb-reader';
 import initSqlJs from 'sql.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PROJECT_ROOT = join(__dirname, '..');
+
+// Accept --cwd argument for packaged mode
+const cwdArg = process.argv.find(a => a.startsWith('--cwd='));
+const PROJECT_ROOT = cwdArg ? cwdArg.split('=')[1] : join(__dirname, '..');
 const DATA_DIR = join(PROJECT_ROOT, 'Upload', 'Data');
 const OUTPUT_DIR = join(PROJECT_ROOT, 'Upload', 'Merged');
 const OUTPUT_PATH = join(OUTPUT_DIR, 'merged.db');
