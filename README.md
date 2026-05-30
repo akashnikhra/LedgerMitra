@@ -233,10 +233,16 @@ The packaged installer will be in the `release/` directory.
 
 If you have existing data from Speed Plus accounting software:
 
-1. Place your `spd.mdb` or `spd.bmw` files in `Upload/Data/`
-2. Open **Legacy Import** from the sidebar
-3. Select the file and map it to your company
-4. Data is imported with audit trail and deduplication
+1. Open **Legacy Import** from the sidebar
+2. Enter the path to your `Upload\Data` folder in the "Data folder path" field and click **Set path**
+3. Select the `spd.mdb` or `spd.bmw` file from the list
+4. Analyze the file, choose company & financial year, then import
+
+The path is saved and persists across sessions. You can also set it via environment variable:
+
+```bat
+set LEDGERMITRA_LEGACY_DATA=F:\path\to\Upload\Data
+```
 
 > See [docs/LEGACY_DATA_MAP.md](docs/LEGACY_DATA_MAP.md) for the field-level mapping reference.
 
