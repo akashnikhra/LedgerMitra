@@ -53,8 +53,7 @@
       "scripts/merge-legacy-data.mjs"
     ],
     "win": {
-      "target": "nsis",
-      "sign": false
+      "target": "nsis"
     }
   }
 }
