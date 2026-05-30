@@ -1,13 +1,13 @@
 # Changelog
 
-## v1.2.2 (2026-05-30)
+## v1.2.2 (2026-05-31)
 
 ### Bug Fixes
 - **Legacy merge in packaged app** — Fixed merge script not found error. Script path corrected to `app.asar.unpacked/scripts/`
 - **Legacy merge data path** — Merge script now uses the configured data folder from settings instead of hardcoded `Upload/Data`
 - **Legacy merge output** — Merged DB now written to `userData/Upload/Merged/` (writable) instead of inside the app bundle
 - **Legacy data folder path** — Added path input in Legacy Import UI to manually set the data folder. Saved to settings table, persists across sessions.
-- **Windows code signing** — Removed invalid `sign` property from electron-builder config that caused schema validation error
+- **Windows packaging** — Added `forceCodeSigning: false` and disabled code signing in build script to fix symlink permission errors during packaging
 
 ## v1.2.1 (2026-05-30)
 

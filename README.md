@@ -218,6 +218,8 @@ npm run package:win
 
 The packaged installer will be in the `release/` directory.
 
+> **Note:** On Windows, packaging requires either **Developer Mode** enabled (Settings > Update & Security > For developers) or running the terminal as Administrator. This is needed for electron-builder to extract code signing tools.
+
 ## Usage
 
 ### First Run
