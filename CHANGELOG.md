@@ -3,8 +3,9 @@
 ## v1.2.2 (2026-05-30)
 
 ### Bug Fixes
-- **Legacy merge in packaged app** — Fixed merge script not found error. Script path corrected to `app.asar.unpacked/scripts/` (asarUnpack output)
-- **Legacy data folder path** — Added path input in Legacy Import UI to manually set the data folder. Saved to settings table, persists across sessions. Fixes env var `LEDGERMITRA_LEGACY_DATA` not persisting in packaged app.
+- **Legacy merge in packaged app** — Fixed merge script not found error. Script path corrected to `app.asar.unpacked/scripts/`
+- **Legacy merge data path** — Merge script now uses the configured data folder from settings instead of hardcoded `Upload/Data`. Passes `--data-dir` argument to the script.
+- **Legacy data folder path** — Added path input in Legacy Import UI to manually set the data folder. Saved to settings table, persists across sessions.
 
 ## v1.2.1 (2026-05-30)
 
