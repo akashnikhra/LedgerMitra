@@ -133,6 +133,44 @@ Light & dark theme variants:
   <em>Send invoice/receipt PDFs directly via WhatsApp Web with customizable message</em>
 </p>
 
+## Licensing
+
+LedgerMitra uses a **free + premium** model:
+
+### Free (Core)
+- Invoicing, Ledger, Products, Customers, Receipts
+- Purchase Invoices, Dashboard, Financial Years
+- 30-day trial with all features unlocked
+
+### Premium
+- WhatsApp Integration
+- Legacy Speed Plus Import
+- Multi-Company
+- Backup & Restore
+- Print & PDF
+
+| License Type | Price | Includes |
+|-------------|-------|----------|
+| Free | ?0 | Core features |
+| Premium Perpetual | ?4,999 one-time | All features + 1 year updates |
+| Premium Yearly | ?1,999/year | All features + all updates + priority support |
+
+### For Customers
+
+1. Download and install LedgerMitra
+2. All features work during the 30-day trial
+3. After trial, premium features require a license key
+4. Activate in: **Settings > License > Activate**
+
+### For Developers (License Generator)
+
+```bash
+# Generate a license key for a customer
+npx tsx scripts/license-gen.ts
+```
+
+The license key is signed with RSA-2048 and validated offline. Private key stays with the developer.
+
 ## Getting Started
 
 ### Prerequisites

@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.2.0 (2026-05-30)
+
+### Licensing System
+- **Offline RSA-2048 validation** — License keys verified locally, no internet required
+- **30-day trial** — All features unlocked on first launch
+- **Feature gating** — Premium features locked after trial: WhatsApp, Legacy Import, Multi-Company, Backup, Print/PDF
+- **Hardware binding** — Licenses tied to machine fingerprint, N activations allowed
+- **License generator CLI** — `npx tsx scripts/license-gen.ts` for creating customer keys
+- **Activation UI** — Settings > License modal for entering keys
+- **Premium badges** — PRO indicators on locked sidebar tabs
+- **Startup check** — License status logged on app launch
+
+### Database
+- Added `licenses` table for storing activated keys
+- Added `license_activations` table for tracking per-machine usage
+
 ## v1.1.0 (2026-05-28)
 
 ### New
