@@ -4,6 +4,25 @@ interface SettingsProps {
   onShowLicense?: () => void;
 }
 
+interface LicenseStatusData {
+  valid: boolean;
+  type: 'trial' | 'perpetual' | 'subscription' | 'none';
+  customer?: string;
+  features: string[];
+  expiry?: string;
+  daysLeft?: number;
+  trialDaysLeft: number;
+}
+
+const PREMIUM_BADGE = (
+  <span style={{
+    display: 'inline-block', padding: '1px 5px',
+    background: 'var(--accent)', color: '#fff',
+    borderRadius: 3, fontSize: 9, fontWeight: 700,
+    letterSpacing: 0.5, verticalAlign: 'middle', marginLeft: 6
+  }}>PRO</span>
+);
+
 export default function Settings({ onShowLicense }: SettingsProps) {
   const [username, setUsername] = useState('admin');
   const [currentPassword, setCurrentPassword] = useState('');
@@ -14,6 +33,7 @@ export default function Settings({ onShowLicense }: SettingsProps) {
   const [saving, setSaving] = useState(false);
   const [backupStatus, setBackupStatus] = useState('');
   const [backupError, setBackupError] = useState('');
+  const [licenseStatus, setLicenseStatus] = useState<LicenseStatusData | null>(null);
 
   const [waStatus, setWaStatus] = useState<'disconnected' | 'connecting' | 'qr' | 'ready' | 'error'>('disconnected');
   const [waMessage, setWaMessage] = useState('');
@@ -42,6 +62,7 @@ export default function Settings({ onShowLicense }: SettingsProps) {
     window.electronAPI.getCurrentUser().then((u) => {
       if (u?.username) setUsername(u.username);
     });
+    window.electronAPI.getLicenseStatus().then(setLicenseStatus);
     loadWhatsAppSettings();
     loadWhatsAppStatus();
     loadMergedInfo();
@@ -276,13 +297,31 @@ export default function Settings({ onShowLicense }: SettingsProps) {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>License</h3>
+            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>
+              License
+              {licenseStatus?.type === 'perpetual' && (
+                <span style={{ display: 'inline-block', padding: '1px 6px', background: 'var(--success)', color: '#fff', borderRadius: 3, fontSize: 10, fontWeight: 700, marginLeft: 8 }}>ACTIVE</span>
+              )}
+              {licenseStatus?.type === 'subscription' && (
+                <span style={{ display: 'inline-block', padding: '1px 6px', background: 'var(--accent)', color: '#fff', borderRadius: 3, fontSize: 10, fontWeight: 700, marginLeft: 8 }}>SUBSCRIBED</span>
+              )}
+              {licenseStatus?.type === 'trial' && licenseStatus.trialDaysLeft > 0 && (
+                <span style={{ display: 'inline-block', padding: '1px 6px', background: 'var(--warning)', color: '#fff', borderRadius: 3, fontSize: 10, fontWeight: 700, marginLeft: 8 }}>TRIAL</span>
+              )}
+              {licenseStatus?.type === 'trial' && licenseStatus.trialDaysLeft === 0 && (
+                <span style={{ display: 'inline-block', padding: '1px 6px', background: 'var(--danger)', color: '#fff', borderRadius: 3, fontSize: 10, fontWeight: 700, marginLeft: 8 }}>EXPIRED</span>
+              )}
+            </h3>
             <p style={{ fontSize: 13, color: 'var(--muted)' }}>
-              Manage your license key and view premium feature status.
+              {licenseStatus?.valid && licenseStatus.customer
+                ? `Licensed to ${licenseStatus.customer}`
+                : licenseStatus?.type === 'trial' && licenseStatus.trialDaysLeft > 0
+                  ? `Trial: ${licenseStatus.trialDaysLeft} days remaining — all features available`
+                  : 'Premium features locked — activate a license key'}
             </p>
           </div>
           <button className="btn" onClick={onShowLicense} style={{ fontSize: 13, padding: '4px 16px' }}>
-            Manage License
+            {licenseStatus?.valid ? 'View License' : 'Activate License'}
           </button>
         </div>
       </div>
@@ -340,7 +379,7 @@ export default function Settings({ onShowLicense }: SettingsProps) {
       </div>
 
       <div className="card">
-        <h3 style={{ fontSize: '1rem', marginBottom: '1rem' }}>WhatsApp</h3>
+        <h3 style={{ fontSize: '1rem', marginBottom: '1rem' }}>WhatsApp{PREMIUM_BADGE}</h3>
         <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '1rem' }}>
           Connect WhatsApp to send invoices, receipts, and ledgers directly to customers.
         </p>
@@ -400,7 +439,7 @@ export default function Settings({ onShowLicense }: SettingsProps) {
       </div>
 
       <div className="card">
-        <h3 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Database backup</h3>
+        <h3 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Database backup{PREMIUM_BADGE}</h3>
         {backupError && <div className="alert alert-error">{backupError}</div>}
         {backupStatus && <div className="alert alert-success">{backupStatus}</div>}
         <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '1rem' }}>
@@ -419,7 +458,7 @@ export default function Settings({ onShowLicense }: SettingsProps) {
 
       {/* Legacy Merge & Import */}
       <div className="card">
-        <h3 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Legacy data merge & import</h3>
+        <h3 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Legacy data merge & import{PREMIUM_BADGE}</h3>
 
         {mergedInfo && mergedInfo.exists && (
           <div style={{ fontSize: '0.85rem', marginBottom: '1rem', color: 'var(--muted)' }}>
