@@ -156,9 +156,17 @@ function createCustomerResolver(
   };
 }
 
-/** All folders to scan for spd.mdb / spd.bmw (env, project Upload, original app) */
+/** All folders to scan for spd.mdb / spd.bmw (settings, env, project Upload, original app) */
 export function getLegacyDataFolders(): string[] {
+  // Check settings table for user-configured path
+  let settingsPath: string | undefined;
+  try {
+    const result = queryOne<{ value: string }>("SELECT value FROM settings WHERE key = 'legacy_data_path'");
+    settingsPath = result?.value;
+  } catch { }
+
   const candidates = [
+    settingsPath,
     process.env.LEDGERMITRA_LEGACY_DATA,
     join(process.cwd(), 'Upload', 'Data')
   ].filter((p): p is string => Boolean(p));

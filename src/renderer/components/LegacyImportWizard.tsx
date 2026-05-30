@@ -75,6 +75,7 @@ export default function LegacyImportWizard() {
   const [modalType, setModalType] = useState<'products' | 'customers' | 'invoices' | 'ledger' | null>(null);
   const [legacyPaths, setLegacyPaths] = useState<string[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(true);
+  const [customPath, setCustomPath] = useState('');
 
   async function loadFiles() {
     setLoadingFiles(true);
@@ -94,7 +95,21 @@ export default function LegacyImportWizard() {
     }
   }
 
+  async function savePath() {
+    if (!customPath.trim()) return;
+    try {
+      await window.electronAPI.setSetting('legacy_data_path', customPath.trim());
+      await loadFiles();
+    } catch (e) {
+      setError((e as Error).message || 'Could not save path');
+    }
+  }
+
   useEffect(() => {
+    // Load saved path from settings
+    window.electronAPI.getSetting('legacy_data_path').then((val) => {
+      if (val) setCustomPath(val);
+    });
     loadFiles();
     window.electronAPI.mdbGetCompanies().then(setCompanies);
   }, []);
@@ -294,6 +309,23 @@ export default function LegacyImportWizard() {
       {/* Step 1: Select legacy file */}
       {step === 1 && (
         <div className="card">
+          <div className="form-group" style={{ marginBottom: '1rem' }}>
+            <label>Data folder path</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                value={customPath}
+                onChange={(e) => setCustomPath(e.target.value)}
+                placeholder="F:\accounting_software\Upload\Data"
+                style={{ flex: 1 }}
+              />
+              <button type="button" className="btn" onClick={savePath} style={{ whiteSpace: 'nowrap' }}>
+                Set path
+              </button>
+            </div>
+            <p style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '4px' }}>
+              Folder containing spd.mdb / spd.bmw files. Set this if files aren't found automatically.
+            </p>
+          </div>
           {legacyPaths.length > 0 && (
             <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '1rem' }}>
               Scanning: {legacyPaths.join(' · ')}
