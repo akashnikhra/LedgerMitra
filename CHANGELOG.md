@@ -7,7 +7,7 @@
 - **Legacy merge data path** — Merge script now uses the configured data folder from settings instead of hardcoded `Upload/Data`
 - **Legacy merge output** — Merged DB now written to `userData/Upload/Merged/` (writable) instead of inside the app bundle
 - **Legacy data folder path** — Added path input in Legacy Import UI to manually set the data folder. Saved to settings table, persists across sessions.
-- **Windows code signing** — Disabled code signing (`sign: false`) to fix symlink permission error during packaging
+- **Windows code signing** — Removed invalid `sign` property from electron-builder config that caused schema validation error
 
 ## v1.2.1 (2026-05-30)
 

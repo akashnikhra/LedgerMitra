@@ -7,7 +7,7 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "package:win": "electron-builder --win --x64",
+    "package:win": "cmd /c \"set CSC_IDENTITY_AUTO_DISCOVERY=false&& set CSC_LINK=&& electron-builder --win --x64\"",
     "merge:legacy": "node scripts/merge-legacy-data.mjs",
     "postinstall": "node scripts/patch-mdb-reader.mjs && electron-builder install-app-deps",
     "rebuild:native": "electron-builder install-app-deps"
@@ -53,7 +53,8 @@
       "scripts/merge-legacy-data.mjs"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "forceCodeSigning": false
     }
   }
 }
