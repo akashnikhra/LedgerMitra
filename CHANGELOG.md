@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.2.3 (2026-05-31)
+
+### Bug Fixes
+- **PRO badges on Settings** — WhatsApp, Backup, and Legacy Import PRO badges now hidden when license is active
+
 ## v1.2.2 (2026-05-31)
 
 ### Bug Fixes
