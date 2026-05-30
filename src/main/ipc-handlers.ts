@@ -499,9 +499,17 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
       return { success: false, error: `Merge script not found at ${scriptPath}` };
     }
 
+    // Read configured data path from settings, fallback to env var
+    const settingsPath = queryOne<{ value: string }>("SELECT value FROM settings WHERE key = 'legacy_data_path'")?.value;
+    const envPath = process.env.LEDGERMITRA_LEGACY_DATA;
+    const dataPath = settingsPath || envPath;
+
     return new Promise((resolve) => {
       const output: string[] = [];
       const args = [scriptPath, `--cwd=${cwd}`];
+      if (dataPath && existsSync(dataPath)) {
+        args.push(`--data-dir=${dataPath}`);
+      }
       const child = spawn('node', args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
 
       child.stdout.on('data', (data: Buffer) => {
