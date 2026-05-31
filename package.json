@@ -1,6 +1,6 @@
 {
   "name": "ledgermitra",
-  "version": "1.0.0",
+  "version": "1.2.4",
   "description": "Modern accounting desktop app with Speed Plus legacy import",
   "main": "dist/main/main.js",
   "scripts": {

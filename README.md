@@ -285,6 +285,7 @@ LedgerMitra/
 ├── scripts/
 │   ├── license-gen.ts             # License key generator & manager
 │   ├── merge-legacy-data.mjs      # Merge multiple MDBs into one DB
+│   ├── merge-legacy-bundled.mjs   # Bundled version (esbuild, includes dependencies)
 │   └── patch-mdb-reader.mjs       # Post-install native module patch
 ├── src/
 │   ├── main/                   # Electron main process

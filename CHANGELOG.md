@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.4 (2026-05-31)
+
+### Bug Fixes
+- **Legacy merge `ERR_MODULE_NOT_FOUND`** — Merge script now bundled with esbuild, inlining `mdb-reader` and `sql.js` dependencies. The child process no longer needs external `node_modules` in packaged mode.
+- **License CLI local storage** — Generated licenses saved to `scripts/keys/licenses.json`. `--list` and `--search` now check both local file and app database.
+- **`.gitignore`** — Added `scripts/keys/licenses.json` and `scripts/keys/licenses-export.csv` to gitignore.
+
 ## v1.2.3 (2026-05-31)
 
 ### Bug Fixes
