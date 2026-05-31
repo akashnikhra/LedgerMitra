@@ -220,6 +220,43 @@ The packaged installer will be in the `release/` directory.
 
 > **Note:** On Windows, packaging requires either **Developer Mode** enabled (Settings > Update & Security > For developers) or running the terminal as Administrator. This is needed for electron-builder to extract code signing tools.
 
+### Portable USB Build
+
+Build a portable version that runs from a USB drive with zero traces on the host machine:
+
+```bat
+npm run build
+npm run package:portable
+```
+
+The portable build is at `release/win-unpacked/`. Copy the entire folder to a USB drive.
+
+**What happens in portable mode:**
+- App auto-detects it's on a removable drive (USB)
+- All data stored on the USB: DB, WhatsApp session, merge output, temp files
+- Temp files are cleaned up when the app exits
+- No data is written to the host machine's `%APPDATA%` or `%TEMP%`
+
+**USB folder structure:**
+```
+USB Drive/
+└── LedgerMitra-Portable/
+    ├── LedgerMitra.exe
+    ├── resources/
+    │   ├── app.asar
+    │   └── app.asar.unpacked/
+    └── LedgerMitra/          ← all data lives here
+        ├── data/             ← database
+        ├── whatsapp-session/ ← WhatsApp auth
+        ├── Upload/Merged/    ← merge output
+        └── temp/             ← cleaned on exit
+```
+
+**Manual launcher** (for development/testing):
+```bat
+portable.bat    # sets LEDGERMITRA_PORTABLE=1 and runs the app
+```
+
 ## Usage
 
 ### First Run

@@ -2,6 +2,14 @@
 
 ## v1.2.4 (2026-05-31)
 
+### New
+- **Portable USB mode** — App auto-detects when running from a removable drive and stores all data (DB, WhatsApp session, merge output, temp files) on the USB. Zero traces left on the host machine. Temp files are cleaned up on exit.
+  - Database: `<usb>/LedgerMitra/data/ledgermitra.db`
+  - WhatsApp session: `<usb>/LedgerMitra/whatsapp-session/`
+  - Merge output: `<usb>/LedgerMitra/Upload/Merged/`
+  - Temp PDFs: `<usb>/LedgerMitra/temp/` (cleaned on quit)
+- **Portable build script** — `npm run package:portable` builds a folder-based portable package
+
 ### Bug Fixes
 - **Legacy merge `ERR_MODULE_NOT_FOUND`** — Merge script now bundled with esbuild, inlining `mdb-reader` and `sql.js` dependencies. The child process no longer needs external `node_modules` in packaged mode.
 - **Legacy merge `Dynamic require of "node:fs"`** — Fixed esbuild ESM bundle by adding `createRequire` shim and `__dirname` polyfill for `sql.js` WASM initialization.

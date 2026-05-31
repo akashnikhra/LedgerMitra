@@ -4,6 +4,7 @@ import { initializeDatabase, getDatabasePath } from './database';
 import { setupIpcHandlers } from './ipc-handlers';
 import { initWhatsApp, shutdownWhatsApp } from './whatsapp';
 import { getLicenseStatus } from './license';
+import { setupPortable, cleanupPortableTemp, isPortable } from './portable';
 
 app.disableHardwareAcceleration();
 
@@ -36,6 +37,9 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
+  setupPortable();
+  if (isPortable()) console.log('[Portable] Running in portable mode — all data on USB');
+
   await initializeDatabase(getDatabasePath());
 
   createWindow();
@@ -62,4 +66,8 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', () => {
   shutdownWhatsApp();
   if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('will-quit', () => {
+  cleanupPortableTemp();
 });
