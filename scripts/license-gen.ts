@@ -25,6 +25,7 @@ const __dirname = dirname(__filename);
 const KEYS_DIR = join(__dirname, 'keys');
 const PRIVATE_KEY_PATH = join(KEYS_DIR, 'private.pem');
 const PUBLIC_KEY_PATH = join(KEYS_DIR, 'public.pem');
+const LOCAL_LICENSES_PATH = join(KEYS_DIR, 'licenses.json');
 
 const PREMIUM_FEATURES = [
   { id: 'whatsapp', name: 'WhatsApp Integration' },
@@ -147,6 +148,20 @@ function printPayload(payload: LicensePayload) {
   if (payload.expiry) console.log('  Expires:', payload.expiry);
 }
 
+function saveLocalLicense(payload: LicensePayload, key: string) {
+  let licenses: Array<{ payload: LicensePayload; key: string; generatedAt: string }> = [];
+  if (existsSync(LOCAL_LICENSES_PATH)) {
+    try { licenses = JSON.parse(readFileSync(LOCAL_LICENSES_PATH, 'utf-8')); } catch { }
+  }
+  licenses.push({ payload, key, generatedAt: new Date().toISOString() });
+  writeFileSync(LOCAL_LICENSES_PATH, JSON.stringify(licenses, null, 2), 'utf-8');
+}
+
+function getLocalLicenses(): Array<{ payload: LicensePayload; key: string; generatedAt: string }> {
+  if (!existsSync(LOCAL_LICENSES_PATH)) return [];
+  try { return JSON.parse(readFileSync(LOCAL_LICENSES_PATH, 'utf-8')); } catch { return []; }
+}
+
 async function generateNewKey() {
   const { privateKey, publicKey } = getKeyPair();
   const rl = createPrompt();
@@ -208,6 +223,8 @@ async function generateNewKey() {
     console.log('');
     console.log('  Send this key to the customer.');
     console.log('  They activate it in: Settings > License > Activate');
+
+    saveLocalLicense(payload, licenseKey);
 
   } finally { rl.close(); }
 }
@@ -273,6 +290,11 @@ async function verifyMode(key: string) {
 }
 
 function getLicenseDBPath(): string {
+  // First check project data/ folder (dev mode)
+  const localDb = join(__dirname, '..', 'data', 'ledgermitra.db');
+  if (existsSync(localDb)) return localDb;
+
+  // Then check standard install locations
   const platform = process.platform;
   const home = process.env.HOME || process.env.USERPROFILE || '';
   if (platform === 'win32') {
@@ -285,194 +307,192 @@ function getLicenseDBPath(): string {
 }
 
 function listAllLicenses(): void {
+  const localLicenses = getLocalLicenses();
   const dbPath = getLicenseDBPath();
-  if (!existsSync(dbPath)) {
+  const dbExists = existsSync(dbPath);
+
+  if (localLicenses.length === 0 && !dbExists) {
     console.log('');
-    console.log('  No database found at:', dbPath);
-    console.log('  No licenses to list.');
+    console.log('  No licenses found.');
+    console.log('  Generate a key first: npx tsx scripts/license-gen.ts');
     console.log('');
     return;
   }
 
-  try {
-    const Database = require('better-sqlite3');
-    const db = new Database(dbPath, { readonly: true });
+  console.log('');
+  console.log('  ==========================================');
+  console.log('    LedgerMitra Licenses');
+  console.log('  ==========================================');
+  console.log('');
 
-    const licenses = db.prepare(`
-      SELECT l.id, l.license_key, l.customer_name, l.customer_email, l.license_type,
-             l.activated_at, l.expires_at, l.max_activations, l.is_active,
-             (SELECT COUNT(*) FROM license_activations la WHERE la.license_id = l.id) as activation_count
-      FROM licenses l
-      ORDER BY l.activated_at DESC
-    `).all();
-
-    db.close();
-
-    if (licenses.length === 0) {
-      console.log('');
-      console.log('  No licenses found in database.');
-      console.log('');
-      return;
-    }
-
+  // Show local generated licenses
+  if (localLicenses.length > 0) {
+    console.log('  Generated licenses (' + localLicenses.length + '):');
     console.log('');
-    console.log('  ==========================================');
-    console.log('    LedgerMitra Licenses');
-    console.log('  ==========================================');
-    console.log('');
-    console.log('  Total licenses:', licenses.length);
-    console.log('');
-
-    for (const lic of licenses) {
-      const now = Math.floor(Date.now() / 1000);
-      const isExpired = lic.expires_at !== -1 && lic.expires_at < now;
-      const isActive = lic.is_active && !isExpired;
-
+    for (const lic of localLicenses) {
       console.log('  ---');
-      console.log('  Name:', lic.customer_name);
-      if (lic.customer_email) console.log('  Email:', lic.customer_email);
-      console.log('  Type:', lic.license_type);
-      console.log('  Activations:', lic.activation_count, '/', lic.max_activations);
-      console.log('  Status:', isActive ? 'ACTIVE' : (isExpired ? 'EXPIRED' : 'INACTIVE'));
-      console.log('  Key:', lic.license_key.substring(0, 30) + '...');
-      if (lic.activated_at > 0) {
-        console.log('  Generated:', new Date(lic.activated_at * 1000).toLocaleDateString());
-      }
-      if (lic.expires_at === -1) {
-        console.log('  Expires: Never');
-      } else {
-        console.log('  Expires:', new Date(lic.expires_at * 1000).toLocaleDateString());
-      }
+      console.log('  Name:', lic.payload.customer);
+      console.log('  Type:', lic.payload.type);
+      console.log('  Features:', lic.payload.features.join(', '));
+      console.log('  Activations:', lic.payload.activations_max);
+      console.log('  Key:', lic.key.substring(0, 40) + '...');
+      console.log('  Generated:', new Date(lic.generatedAt).toLocaleDateString());
+      if (lic.payload.expiry) console.log('  Expires:', lic.payload.expiry);
     }
-
-    console.log('');
-    console.log('  ---');
-    console.log('  Active: ' + licenses.filter(l => l.is_active && (l.expires_at === -1 || l.expires_at >= Math.floor(Date.now() / 1000))).length);
-    console.log('  Expired: ' + licenses.filter(l => l.is_active && l.expires_at !== -1 && l.expires_at < Math.floor(Date.now() / 1000)).length);
-    console.log('  Inactive: ' + licenses.filter(l => !l.is_active).length);
-    console.log('');
-  } catch (err) {
-    console.log('');
-    console.log('  Error reading database:', err.message);
-    console.log('');
   }
+
+  // Show activated licenses from database
+  if (dbExists) {
+    try {
+      const Database = require('better-sqlite3');
+      const db = new Database(dbPath, { readonly: true });
+      const licenses = db.prepare(`
+        SELECT l.id, l.license_key, l.customer_name, l.customer_email, l.license_type,
+               l.activated_at, l.expires_at, l.max_activations, l.is_active,
+               (SELECT COUNT(*) FROM license_activations la WHERE la.license_id = l.id) as activation_count
+        FROM licenses l ORDER BY l.activated_at DESC
+      `).all();
+      db.close();
+
+      if (licenses.length > 0) {
+        if (localLicenses.length > 0) console.log('');
+        console.log('  Activated licenses (' + licenses.length + '):');
+        console.log('');
+        const now = Math.floor(Date.now() / 1000);
+        for (const lic of licenses) {
+          const isExpired = lic.expires_at !== -1 && lic.expires_at < now;
+          const isActive = lic.is_active && !isExpired;
+          console.log('  ---');
+          console.log('  Name:', lic.customer_name);
+          if (lic.customer_email) console.log('  Email:', lic.customer_email);
+          console.log('  Type:', lic.license_type);
+          console.log('  Activations:', lic.activation_count, '/', lic.max_activations);
+          console.log('  Status:', isActive ? 'ACTIVE' : (isExpired ? 'EXPIRED' : 'INACTIVE'));
+          console.log('  Key:', lic.license_key.substring(0, 40) + '...');
+        }
+      }
+    } catch { }
+  }
+
+  console.log('');
 }
 
 function searchLicenses(query: string): void {
+  const localLicenses = getLocalLicenses().filter(l =>
+    l.payload.customer.toLowerCase().includes(query.toLowerCase()) ||
+    l.key.toLowerCase().includes(query.toLowerCase())
+  );
   const dbPath = getLicenseDBPath();
-  if (!existsSync(dbPath)) {
+  const dbExists = existsSync(dbPath);
+
+  if (localLicenses.length === 0 && !dbExists) {
     console.log('');
-    console.log('  No database found at:', dbPath);
+    console.log('  No licenses found matching:', query);
     console.log('');
     return;
   }
 
-  try {
-    const Database = require('better-sqlite3');
-    const db = new Database(dbPath, { readonly: true });
+  let found = false;
 
-    const licenses = db.prepare(`
-      SELECT l.id, l.license_key, l.customer_name, l.customer_email, l.license_type,
-             l.activated_at, l.expires_at, l.max_activations, l.is_active,
-             (SELECT COUNT(*) FROM license_activations la WHERE la.license_id = l.id) as activation_count
-      FROM licenses l
-      WHERE l.customer_name LIKE ? OR l.license_key LIKE ? OR l.customer_email LIKE ?
-      ORDER BY l.activated_at DESC
-    `).all(`%${query}%`, `%${query}%`, `%${query}%`);
-
-    db.close();
-
-    if (licenses.length === 0) {
-      console.log('');
-      console.log('  No licenses found matching:', query);
-      console.log('');
-      return;
-    }
-
+  if (localLicenses.length > 0) {
+    found = true;
     console.log('');
-    console.log('  Found', licenses.length, 'license(s) matching "' + query + '"');
+    console.log('  Found', localLicenses.length, 'generated license(s) matching "' + query + '"');
     console.log('');
-
-    for (const lic of licenses) {
-      const now = Math.floor(Date.now() / 1000);
-      const isExpired = lic.expires_at !== -1 && lic.expires_at < now;
-      const isActive = lic.is_active && !isExpired;
-
+    for (const lic of localLicenses) {
       console.log('  ---');
-      console.log('  Name:', lic.customer_name);
-      if (lic.customer_email) console.log('  Email:', lic.customer_email);
-      console.log('  Type:', lic.license_type);
-      console.log('  Activations:', lic.activation_count, '/', lic.max_activations);
-      console.log('  Status:', isActive ? 'ACTIVE' : (isExpired ? 'EXPIRED' : 'INACTIVE'));
-      console.log('  Key:', lic.license_key);
+      console.log('  Name:', lic.payload.customer);
+      console.log('  Type:', lic.payload.type);
+      console.log('  Features:', lic.payload.features.join(', '));
+      console.log('  Activations:', lic.payload.activations_max);
+      console.log('  Key:', lic.key);
+      console.log('  Generated:', new Date(lic.generatedAt).toLocaleDateString());
     }
-
-    console.log('');
-  } catch (err) {
-    console.log('');
-    console.log('  Error reading database:', err.message);
-    console.log('');
   }
+
+  if (dbExists) {
+    try {
+      const Database = require('better-sqlite3');
+      const db = new Database(dbPath, { readonly: true });
+      const licenses = db.prepare(`
+        SELECT l.id, l.license_key, l.customer_name, l.customer_email, l.license_type,
+               l.activated_at, l.expires_at, l.max_activations, l.is_active,
+               (SELECT COUNT(*) FROM license_activations la WHERE la.license_id = l.id) as activation_count
+        FROM licenses l
+        WHERE l.customer_name LIKE ? OR l.license_key LIKE ? OR l.customer_email LIKE ?
+        ORDER BY l.activated_at DESC
+      `).all(`%${query}%`, `%${query}%`, `%${query}%`);
+      db.close();
+
+      if (licenses.length > 0) {
+        found = true;
+        if (localLicenses.length > 0) console.log('');
+        console.log('  Found', licenses.length, 'activated license(s) matching "' + query + '"');
+        console.log('');
+        const now = Math.floor(Date.now() / 1000);
+        for (const lic of licenses) {
+          const isExpired = lic.expires_at !== -1 && lic.expires_at < now;
+          const isActive = lic.is_active && !isExpired;
+          console.log('  ---');
+          console.log('  Name:', lic.customer_name);
+          console.log('  Status:', isActive ? 'ACTIVE' : (isExpired ? 'EXPIRED' : 'INACTIVE'));
+          console.log('  Key:', lic.license_key);
+        }
+      }
+    } catch { }
+  }
+
+  if (!found) {
+    console.log('');
+    console.log('  No licenses found matching:', query);
+  }
+  console.log('');
 }
 
 function exportLicensesToCSV(): void {
+  const localLicenses = getLocalLicenses();
   const dbPath = getLicenseDBPath();
-  if (!existsSync(dbPath)) {
+  const dbExists = existsSync(dbPath);
+
+  if (localLicenses.length === 0 && !dbExists) {
     console.log('');
-    console.log('  No database found at:', dbPath);
+    console.log('  No licenses found to export.');
     console.log('');
     return;
   }
 
-  try {
-    const Database = require('better-sqlite3');
-    const db = new Database(dbPath, { readonly: true });
+  const rows = [
+    'Source,Customer Name,Type,Features,Max Activations,Key,Generated'
+  ];
 
-    const licenses = db.prepare(`
-      SELECT l.customer_name, l.customer_email, l.license_key, l.license_type,
-             l.max_activations, l.is_active, l.activated_at, l.expires_at,
-             (SELECT COUNT(*) FROM license_activations la WHERE la.license_id = l.id) as activation_count
-      FROM licenses l
-      ORDER BY l.activated_at DESC
-    `).all();
-
-    db.close();
-
-    if (licenses.length === 0) {
-      console.log('');
-      console.log('  No licenses found to export.');
-      console.log('');
-      return;
-    }
-
-    const now = Math.floor(Date.now() / 1000);
-    const rows = [
-      'Customer Name,Email,License Key,Type,Activations Used,Max Activations,Status,Generated,Expires'
-    ];
-
-    for (const lic of licenses) {
-      const isExpired = lic.expires_at !== -1 && lic.expires_at < now;
-      const status = lic.is_active ? (isExpired ? 'Expired' : 'Active') : 'Inactive';
-      const generated = lic.activated_at > 0 ? new Date(lic.activated_at * 1000).toISOString().split('T')[0] : '';
-      const expires = lic.expires_at === -1 ? 'Never' : new Date(lic.expires_at * 1000).toISOString().split('T')[0];
-
-      rows.push(`"${lic.customer_name}","${lic.customer_email || ''}","${lic.license_key}","${lic.license_type}","${lic.activation_count}","${lic.max_activations}","${status}","${generated}","${expires}"`);
-    }
-
-    const csvPath = join(__dirname, 'licenses-export.csv');
-    writeFileSync(csvPath, rows.join('\n'), 'utf-8');
-
-    console.log('');
-    console.log('  Exported', licenses.length, 'license(s) to:', csvPath);
-    console.log('');
-    console.log('  TIP: Keep this file as your sales record.');
-    console.log('  When a customer loses their key, search this file.');
-    console.log('');
-  } catch (err) {
-    console.log('');
-    console.log('  Error exporting:', err.message);
-    console.log('');
+  for (const lic of localLicenses) {
+    const generated = new Date(lic.generatedAt).toISOString().split('T')[0];
+    rows.push(`"generated","${lic.payload.customer}","${lic.payload.type}","${lic.payload.features.join('; ')}","${lic.payload.activations_max}","${lic.key}","${generated}"`);
   }
+
+  if (dbExists) {
+    try {
+      const Database = require('better-sqlite3');
+      const db = new Database(dbPath, { readonly: true });
+      const licenses = db.prepare(`
+        SELECT l.customer_name, l.license_key, l.license_type,
+               l.max_activations, l.is_active, l.activated_at, l.expires_at
+        FROM licenses l ORDER BY l.activated_at DESC
+      `).all();
+      db.close();
+      for (const lic of licenses) {
+        const generated = lic.activated_at > 0 ? new Date(lic.activated_at * 1000).toISOString().split('T')[0] : '';
+        rows.push(`"activated","${lic.customer_name}","${lic.license_type}","","${lic.max_activations}","${lic.license_key}","${generated}"`);
+      }
+    } catch { }
+  }
+
+  const csvPath = join(__dirname, 'keys', 'licenses-export.csv');
+  writeFileSync(csvPath, rows.join('\n'), 'utf-8');
+
+  console.log('');
+  console.log('  Exported', rows.length - 1, 'license(s) to:', csvPath);
+  console.log('');
 }
 
 // Main

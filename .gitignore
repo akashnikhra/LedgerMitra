@@ -25,3 +25,5 @@ Thumbs.db
 
 # License private key (NEVER commit)
 scripts/keys/private.pem
+scripts/keys/licenses.json
+scripts/keys/licenses-export.csv
