@@ -4,6 +4,8 @@
 
 ### Bug Fixes
 - **Legacy merge `ERR_MODULE_NOT_FOUND`** — Merge script now bundled with esbuild, inlining `mdb-reader` and `sql.js` dependencies. The child process no longer needs external `node_modules` in packaged mode.
+- **Legacy merge `Dynamic require of "node:fs"`** — Fixed esbuild ESM bundle by adding `createRequire` shim and `__dirname` polyfill for `sql.js` WASM initialization.
+- **Legacy merge WASM not found** — `sql-wasm.wasm` now bundled alongside the script in `app.asar.unpacked/scripts/`. Added `locateFile` config to point `sql.js` to the correct path.
 - **License CLI local storage** — Generated licenses saved to `scripts/keys/licenses.json`. `--list` and `--search` now check both local file and app database.
 - **`.gitignore`** — Added `scripts/keys/licenses.json` and `scripts/keys/licenses-export.csv` to gitignore.
 

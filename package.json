@@ -47,10 +47,12 @@
       "dist/**/*",
       "database/**/*",
       "scripts/merge-legacy-bundled.mjs",
+      "scripts/sql-wasm.wasm",
       "package.json"
     ],
     "asarUnpack": [
-      "scripts/merge-legacy-bundled.mjs"
+      "scripts/merge-legacy-bundled.mjs",
+      "scripts/sql-wasm.wasm"
     ],
     "win": {
       "target": "nsis",

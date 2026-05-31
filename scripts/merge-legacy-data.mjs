@@ -112,8 +112,9 @@ async function main() {
   }
   console.log('');
 
-  // Init SQL.js
-  const SQL = await initSqlJs();
+  // Init SQL.js — locate wasm relative to this script
+  const scriptDir = dirname(fileURLToPath(import.meta.url));
+  const SQL = await initSqlJs({ locateFile: file => join(scriptDir, file) });
 
   if (!existsSync(OUTPUT_DIR)) {
     mkdirSync(OUTPUT_DIR, { recursive: true });

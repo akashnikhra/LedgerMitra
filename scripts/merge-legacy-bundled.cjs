@@ -1,16 +1,11 @@
+"use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-import { createRequire as __nodeCreateRequire } from 'module';
-import { fileURLToPath as __fileURLToPath } from 'url';
-import { dirname as __dirname_fn } from 'path';
-var __require = __nodeCreateRequire(import.meta.url);
-var __filename = __fileURLToPath(import.meta.url);
-var __dirname = __dirname_fn(__filename);
-var __commonJS = (cb, mod) => function __require2() {
+var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
 var __copyProps = (to, from, except, desc) => {
@@ -32,7 +27,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 
 // node_modules/sql.js/dist/sql-wasm.js
 var require_sql_wasm = __commonJS({
-  "node_modules/sql.js/dist/sql-wasm.js"(exports2, module) {
+  "node_modules/sql.js/dist/sql-wasm.js"(exports2, module2) {
     var initSqlJsPromise = void 0;
     var initSqlJs2 = function(moduleConfig) {
       if (initSqlJsPromise) {
@@ -51,7 +46,7 @@ var require_sql_wasm = __commonJS({
         Module["postRun"].push(function() {
           resolveModule(Module);
         });
-        module = void 0;
+        module2 = void 0;
         var k;
         k ||= typeof Module != "undefined" ? Module : {};
         var aa = !!globalThis.window, ba = !!globalThis.WorkerGlobalScope, ca = globalThis.process?.versions?.node && "renderer" != globalThis.process?.type;
@@ -562,7 +557,7 @@ var require_sql_wasm = __commonJS({
         "undefined" != typeof __filename ? ya = __filename : ba && (ya = self.location.href);
         var za = "", Aa, Ba;
         if (ca) {
-          var fs = __require("node:fs");
+          var fs = require("node:fs");
           za = __dirname + "/";
           Ba = (a) => {
             a = Ca(a) ? new URL(a) : a;
@@ -574,7 +569,7 @@ var require_sql_wasm = __commonJS({
           };
           1 < process.argv.length && (wa = process.argv[1].replace(/\\/g, "/"));
           process.argv.slice(2);
-          "undefined" != typeof module && (module.exports = k);
+          "undefined" != typeof module2 && (module2.exports = k);
           xa = (a, b) => {
             process.exitCode = a;
             throw b;
@@ -753,7 +748,7 @@ var require_sql_wasm = __commonJS({
           return a + b;
         }, cb = (a) => a && a.match(/([^\/]+|\/)\/*$/)[1], db = () => {
           if (ca) {
-            var a = __require("node:crypto");
+            var a = require("node:crypto");
             return (b) => a.randomFillSync(b);
           }
           return (b) => crypto.getRandomValues(b);
@@ -2160,9 +2155,9 @@ var require_sql_wasm = __commonJS({
       });
       return initSqlJsPromise;
     };
-    if (typeof exports2 === "object" && typeof module === "object") {
-      module.exports = initSqlJs2;
-      module.exports.default = initSqlJs2;
+    if (typeof exports2 === "object" && typeof module2 === "object") {
+      module2.exports = initSqlJs2;
+      module2.exports.default = initSqlJs2;
     } else if (typeof define === "function" && define["amd"]) {
       define([], function() {
         return initSqlJs2;
@@ -2174,10 +2169,10 @@ var require_sql_wasm = __commonJS({
 });
 
 // scripts/merge-legacy-data.mjs
-import { readFileSync, readdirSync, existsSync, statSync, mkdirSync, writeFileSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
-import { createHash as createHash2 } from "crypto";
+var import_fs = require("fs");
+var import_path = require("path");
+var import_url = require("url");
+var import_crypto6 = require("crypto");
 
 // node_modules/mdb-reader/lib/node/SortOrder.js
 var GENERAL_SORT_ORDER_VALUE = 1033;
@@ -2356,16 +2351,16 @@ function createIdentityHandler() {
 }
 
 // node_modules/mdb-reader/lib/node/environment/index.js
-import { inflateSync } from "node:zlib";
-import { createDecipheriv, createHash } from "crypto";
+var import_node_zlib = require("node:zlib");
+var import_crypto = require("crypto");
 var environment = {
-  inflate: (data) => inflateSync(data)
+  inflate: (data) => (0, import_node_zlib.inflateSync)(data)
 };
 
 // node_modules/mdb-reader/lib/node/crypto/blockDecrypt.js
 function blockDecrypt(cipher, key, iv, data) {
   const algorithm = `${cipher.algorithm}-${key.length * 8}-${cipher.chaining.slice(-3)}`;
-  const decipher = createDecipheriv(algorithm, key, iv);
+  const decipher = (0, import_crypto.createDecipheriv)(algorithm, key, iv);
   decipher.setAutoPadding(false);
   return decipher.update(data);
 }
@@ -2413,7 +2408,7 @@ function maskTableId(id) {
 
 // node_modules/mdb-reader/lib/node/crypto/hash.js
 function hash(algorithm, buffers, length) {
-  const digest = createHash(algorithm);
+  const digest = (0, import_crypto.createHash)(algorithm);
   for (const buffer of buffers) {
     digest.update(buffer);
   }
@@ -7888,43 +7883,44 @@ var MDBReader = class {
 
 // scripts/merge-legacy-data.mjs
 var import_sql = __toESM(require_sql_wasm(), 1);
-var __dirname2 = dirname(fileURLToPath(import.meta.url));
+var import_meta = {};
+var __dirname2 = (0, import_path.dirname)((0, import_url.fileURLToPath)(import_meta.url));
 var cwdArg = process.argv.find((a) => a.startsWith("--cwd="));
 var dataDirArg = process.argv.find((a) => a.startsWith("--data-dir="));
 var outputDirArg = process.argv.find((a) => a.startsWith("--output-dir="));
-var PROJECT_ROOT = cwdArg ? cwdArg.split("=")[1] : join(__dirname2, "..");
-var DATA_DIR = dataDirArg ? dataDirArg.split("=")[1] : join(PROJECT_ROOT, "Upload", "Data");
-var OUTPUT_DIR = outputDirArg ? outputDirArg.split("=")[1] : join(PROJECT_ROOT, "Upload", "Merged");
-var OUTPUT_PATH = join(OUTPUT_DIR, "merged.db");
+var PROJECT_ROOT = cwdArg ? cwdArg.split("=")[1] : (0, import_path.join)(__dirname2, "..");
+var DATA_DIR = dataDirArg ? dataDirArg.split("=")[1] : (0, import_path.join)(PROJECT_ROOT, "Upload", "Data");
+var OUTPUT_DIR = outputDirArg ? outputDirArg.split("=")[1] : (0, import_path.join)(PROJECT_ROOT, "Upload", "Merged");
+var OUTPUT_PATH = (0, import_path.join)(OUTPUT_DIR, "merged.db");
 function computeFileHash(filePath) {
-  const buffer = readFileSync(filePath);
-  return createHash2("sha256").update(buffer).digest("hex");
+  const buffer = (0, import_fs.readFileSync)(filePath);
+  return (0, import_crypto6.createHash)("sha256").update(buffer).digest("hex");
 }
 function collectSourceFiles() {
   const files = [];
-  const folders = readdirSync(DATA_DIR).filter((d) => d.startsWith("Data ")).sort((a, b) => {
+  const folders = (0, import_fs.readdirSync)(DATA_DIR).filter((d) => d.startsWith("Data ")).sort((a, b) => {
     const na = parseInt(a.replace("Data ", ""), 10);
     const nb = parseInt(b.replace("Data ", ""), 10);
     return na - nb;
   });
   for (const folder of folders) {
-    const folderPath = join(DATA_DIR, folder);
-    if (!statSync(folderPath).isDirectory()) continue;
-    const entries = readdirSync(folderPath).filter((f) => /\.(mdb|bmw|accdb)$/i.test(f));
+    const folderPath = (0, import_path.join)(DATA_DIR, folder);
+    if (!(0, import_fs.statSync)(folderPath).isDirectory()) continue;
+    const entries = (0, import_fs.readdirSync)(folderPath).filter((f) => /\.(mdb|bmw|accdb)$/i.test(f));
     const mainFile = entries.find((f) => /^spd\.mdb$/i.test(f));
     const backupFiles = entries.filter((f) => f !== mainFile).sort();
     const ordered = [];
     if (mainFile) ordered.push(mainFile);
     ordered.push(...backupFiles);
     for (const entry of ordered) {
-      const filePath = join(folderPath, entry);
+      const filePath = (0, import_path.join)(folderPath, entry);
       const hash2 = computeFileHash(filePath);
       files.push({
         folder,
         fileName: entry,
         filePath,
         fileHash: hash2,
-        fileSize: statSync(filePath).size,
+        fileSize: (0, import_fs.statSync)(filePath).size,
         label: `${folder}/${entry}`
       });
     }
@@ -7952,7 +7948,7 @@ function remapVoucherId(row, voucherColumn, prefix) {
 }
 async function main() {
   console.log("=== LedgerMitra \u2014 Legacy Data Merge Utility ===\n");
-  if (!existsSync(DATA_DIR)) {
+  if (!(0, import_fs.existsSync)(DATA_DIR)) {
     console.error(`Error: Data directory not found at ${DATA_DIR}`);
     process.exit(1);
   }
@@ -7968,15 +7964,14 @@ async function main() {
     console.log(`  [${prefix.padEnd(8)}] ${f.label.padEnd(35)} ${sizeMB2} MB`);
   }
   console.log("");
-  const scriptDir = dirname(fileURLToPath(import.meta.url));
-  const SQL = await (0, import_sql.default)({ locateFile: (file) => join(scriptDir, file) });
-  if (!existsSync(OUTPUT_DIR)) {
-    mkdirSync(OUTPUT_DIR, { recursive: true });
+  const SQL = await (0, import_sql.default)();
+  if (!(0, import_fs.existsSync)(OUTPUT_DIR)) {
+    (0, import_fs.mkdirSync)(OUTPUT_DIR, { recursive: true });
   }
   const db = new SQL.Database();
   db.run("PRAGMA page_size = 4096");
   db.run("PRAGMA synchronous = OFF");
-  const refBuf = readFileSync(sourceFiles[0].filePath);
+  const refBuf = (0, import_fs.readFileSync)(sourceFiles[0].filePath);
   const refReader = new MDBReader(refBuf);
   const refLedgerCols = refReader.getTable("Ledger").getColumnNames();
   const ledgerColDefs = refLedgerCols.map((c) => `"${c}" TEXT`).concat([
@@ -8025,7 +8020,7 @@ async function main() {
     const sourceLabel = sourceFile.label;
     console.log(`Processing: ${sourceLabel} (prefix: ${prefix})...`);
     try {
-      const buf = readFileSync(sourceFile.filePath);
+      const buf = (0, import_fs.readFileSync)(sourceFile.filePath);
       const reader = new MDBReader(buf);
       let accountNew = 0;
       try {
@@ -8179,7 +8174,7 @@ async function main() {
   }
   const data = db.export();
   const buffer = Buffer.from(data);
-  writeFileSync(OUTPUT_PATH, buffer);
+  (0, import_fs.writeFileSync)(OUTPUT_PATH, buffer);
   db.close();
   const elapsed = ((Date.now() - startTime) / 1e3).toFixed(1);
   console.log(`
@@ -8199,7 +8194,7 @@ Done in ${elapsed}s.`);
 Total: Ledger=${tLedger} Account=${tAccount} (deduped) Items=${tItems} (deduped) Inventory=${tInv} BillMaster=${tBM}`);
   console.log(`
 Output: ${OUTPUT_PATH}`);
-  const sizeMB = (statSync(OUTPUT_PATH).size / 1024 / 1024).toFixed(1);
+  const sizeMB = ((0, import_fs.statSync)(OUTPUT_PATH).size / 1024 / 1024).toFixed(1);
   console.log(`Size: ${sizeMB} MB`);
 }
 main().catch((err) => {
