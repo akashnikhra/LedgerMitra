@@ -485,13 +485,13 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
     let cwd: string;
 
     if (app.isPackaged) {
-      // In packaged mode, asarUnpack extracts to resources/app.asar.unpacked/
+      // In packaged mode, use bundled script (includes all dependencies)
       const resourcesPath = process.resourcesPath;
-      scriptPath = join(resourcesPath, 'app.asar.unpacked', 'scripts', 'merge-legacy-data.mjs');
+      scriptPath = join(resourcesPath, 'app.asar.unpacked', 'scripts', 'merge-legacy-bundled.mjs');
       cwd = join(resourcesPath, 'app.asar.unpacked');
     } else {
-      // In dev mode, script is in the project root
-      scriptPath = join(__dirname, '..', '..', 'scripts', 'merge-legacy-data.mjs');
+      // In dev mode, use bundled script from project root
+      scriptPath = join(__dirname, '..', '..', 'scripts', 'merge-legacy-bundled.mjs');
       cwd = join(__dirname, '..', '..');
     }
 
