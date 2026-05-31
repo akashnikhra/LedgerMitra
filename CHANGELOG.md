@@ -10,6 +10,9 @@
   - Temp PDFs: `<usb>/LedgerMitra/temp/` (cleaned on quit)
 - **Portable build script** — `npm run package:portable` builds a folder-based portable package
 
+### Improvements
+- **Expired subscription UX** — When a Premium Yearly license expires, the app now shows a red "EXPIRED" badge with the expiry date and renewal message, instead of falling back to the generic trial view. Premium features remain blocked until the license is renewed.
+
 ### Bug Fixes
 - **Legacy merge `ERR_MODULE_NOT_FOUND`** — Merge script now bundled with esbuild, inlining `mdb-reader` and `sql.js` dependencies. The child process no longer needs external `node_modules` in packaged mode.
 - **Legacy merge `Dynamic require of "node:fs"`** — Fixed esbuild ESM bundle by adding `createRequire` shim and `__dirname` polyfill for `sql.js` WASM initialization.
