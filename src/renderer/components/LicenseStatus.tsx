@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 interface LicenseStatusData {
   valid: boolean;
-  type: 'trial' | 'perpetual' | 'subscription' | 'none';
+  type: 'trial' | 'perpetual' | 'subscription' | 'expired_subscription' | 'none';
   customer?: string;
   features: string[];
   expiry?: string;
@@ -10,6 +10,7 @@ interface LicenseStatusData {
   activationsUsed: number;
   activationsMax: number;
   trialDaysLeft: number;
+  error?: string;
 }
 
 interface Props {
@@ -75,6 +76,17 @@ export default function LicenseStatus({ onActivate }: Props) {
         </span>
       );
     }
+    if (status.type === 'expired_subscription') {
+      return (
+        <span style={{
+          display: 'inline-block', padding: '2px 8px',
+          background: 'var(--danger)', color: '#fff',
+          borderRadius: 4, fontSize: 11, fontWeight: 700
+        }}>
+          EXPIRED
+        </span>
+      );
+    }
     return null;
   }
 
@@ -110,6 +122,17 @@ export default function LicenseStatus({ onActivate }: Props) {
               }} />
             </div>
           )}
+        </div>
+      )}
+
+      {status.type === 'expired_subscription' && (
+        <div style={{ marginBottom: 12 }}>
+          <p style={{ fontSize: 13, color: 'var(--danger)' }}>
+            Subscription expired{status.expiry ? <> on <strong>{status.expiry}</strong></> : ''}
+          </p>
+          <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
+            Renew your license to restore premium features.
+          </p>
         </div>
       )}
 

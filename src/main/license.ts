@@ -36,7 +36,7 @@ export interface LicensePayload {
 
 export interface LicenseStatus {
   valid: boolean;
-  type: 'trial' | 'perpetual' | 'subscription' | 'none';
+  type: 'trial' | 'perpetual' | 'subscription' | 'expired_subscription' | 'none';
   customer?: string;
   features: PremiumFeature[];
   expiry?: string;
@@ -232,6 +232,24 @@ export function getLicenseStatus(): LicenseStatus {
         activationsUsed: activations?.count || 0,
         activationsMax: payload.activations_max,
         trialDaysLeft: 0
+      };
+    }
+
+    // License stored but verification failed (expired, wrong machine, etc.)
+    // Parse it to check if it's an expired subscription
+    const parsed = parseLicenseKey(stored.key);
+    if (parsed && parsed.payload.type === 'subscription' && parsed.payload.expiry) {
+      return {
+        valid: false,
+        type: 'expired_subscription',
+        customer: parsed.payload.customer,
+        features: [],
+        expiry: parsed.payload.expiry,
+        daysLeft: 0,
+        activationsUsed: 0,
+        activationsMax: 0,
+        trialDaysLeft: 0,
+        error: 'Subscription expired'
       };
     }
   }

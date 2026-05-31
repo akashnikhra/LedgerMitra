@@ -311,13 +311,18 @@ export default function Settings({ onShowLicense }: SettingsProps) {
               {licenseStatus?.type === 'trial' && licenseStatus.trialDaysLeft === 0 && (
                 <span style={{ display: 'inline-block', padding: '1px 6px', background: 'var(--danger)', color: '#fff', borderRadius: 3, fontSize: 10, fontWeight: 700, marginLeft: 8 }}>EXPIRED</span>
               )}
+              {licenseStatus?.type === 'expired_subscription' && (
+                <span style={{ display: 'inline-block', padding: '1px 6px', background: 'var(--danger)', color: '#fff', borderRadius: 3, fontSize: 10, fontWeight: 700, marginLeft: 8 }}>EXPIRED</span>
+              )}
             </h3>
             <p style={{ fontSize: 13, color: 'var(--muted)' }}>
               {licenseStatus?.valid && licenseStatus.customer
                 ? `Licensed to ${licenseStatus.customer}`
-                : licenseStatus?.type === 'trial' && licenseStatus.trialDaysLeft > 0
-                  ? `Trial: ${licenseStatus.trialDaysLeft} days remaining — all features available`
-                  : 'Premium features locked — activate a license key'}
+                : licenseStatus?.type === 'expired_subscription'
+                  ? `Subscription expired${licenseStatus.expiry ? ` on ${licenseStatus.expiry}` : ''} — renew to restore premium features`
+                  : licenseStatus?.type === 'trial' && licenseStatus.trialDaysLeft > 0
+                    ? `Trial: ${licenseStatus.trialDaysLeft} days remaining — all features available`
+                    : 'Premium features locked — activate a license key'}
             </p>
           </div>
           <button className="btn" onClick={onShowLicense} style={{ fontSize: 13, padding: '4px 16px' }}>
