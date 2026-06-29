@@ -38,7 +38,7 @@ All data stays **offline on your machine** — no cloud, no subscriptions, no in
 
 - **Dashboard** — KPI cards, sales/purchase summaries, outstanding snapshots
 - **Invoicing** — Create and manage sales invoices with line items, GST, and auto-numbering
-- **Purchase Invoices** — Record purchases with stock and ledger integration
+- **Purchase Invoices** — Record purchases with stock updates, ledger integration, per-line discount %, and remarks. Full GST support.
 - **Payment Receipts** — Receive payments with auto or manual invoice allocation, edit existing receipts with ledger reversal, view legacy imported payments
 - **Ledger** — Customer-wise, year-wise, invoice-wise, and all-customers ledger with debit/credit summaries
 - **Customers & Suppliers** — Party master management with opening balances
@@ -61,6 +61,7 @@ All data stays **offline on your machine** — no cloud, no subscriptions, no in
 | **Auto-numbering** | Invoice and receipt numbers auto-generated per financial year. |
 | **Stock tracking** | Product stock quantity updated on invoice/purchase creation. Reorder level alerts on dashboard. |
 | **Payment allocation** | Receipts can be auto-allocated against oldest outstanding invoices or manually assigned. |
+| **Line-item discount %** | Per-item discount percentage on purchase and sales invoices, applied before GST calculation. |
 
 ## Tech Stack
 
@@ -229,28 +230,13 @@ npm run build
 npm run package:portable
 ```
 
-The portable build is at `release/win-unpacked/`. Copy the entire folder to a USB drive.
+The portable build produces a single `LedgerMitra Portable.exe` in the `release/` directory. Copy it to a USB drive and run directly — no installation needed.
 
 **What happens in portable mode:**
-- App auto-detects it's on a removable drive (USB)
+- App auto-detects it's on a removable drive (PowerShell + wmic detection)
 - All data stored on the USB: DB, WhatsApp session, merge output, temp files
 - Temp files are cleaned up when the app exits
 - No data is written to the host machine's `%APPDATA%` or `%TEMP%`
-
-**USB folder structure:**
-```
-USB Drive/
-└── LedgerMitra-Portable/
-    ├── LedgerMitra.exe
-    ├── resources/
-    │   ├── app.asar
-    │   └── app.asar.unpacked/
-    └── LedgerMitra/          ← all data lives here
-        ├── data/             ← database
-        ├── whatsapp-session/ ← WhatsApp auth
-        ├── Upload/Merged/    ← merge output
-        └── temp/             ← cleaned on exit
-```
 
 **Manual launcher** (for development/testing):
 ```bat

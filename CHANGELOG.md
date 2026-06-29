@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.3.1 (2026-06-29)
+
+### Improvements
+- **Portable mode detection** — Added PowerShell `Get-Volume` fallback for drive detection. `wmic` is deprecated/removed on newer Windows 10/11 builds; the app now tries PowerShell first, then falls back to `wmic`, then checks for a `portable.txt` marker file.
+- **Portable build produces `.exe`** — `npm run package:portable` now builds a single portable `LedgerMitra.exe` via electron-builder's portable target instead of an unpacked folder.
+- **`portable.bat` updated** — Launcher no longer requires Node.js (`npx electron .`). It runs the packaged `.exe` directly.
+- **Legacy import product rates** — Expanded column matching: `SalePrice`, `SelectedPrice`, `MRP`, `Rate`, `Price`, `Sp1`/`Sp2`/`Sp3` for selling; `PurchasePrice`, `CostPrice`, `Cost`, `Pp1` for purchase. Added `pickBestRate()` multi-column fallback when preferred columns are missing or zero.
+- **Legacy import debug logging** — Logs all MDB columns, mapped column names, first 5 product rows with rates, BillMaster/Inventory sample rows, discount and remarks counts.
+- **Purchase invoice discount & remarks** — New `discount_pct` (percentage) and `remarks` columns on invoice items. Discount applied per line item before GST calculation. Stored in both `invoice_items` and `purchase_invoice_items` tables.
+- **Purchase invoice UI improvements** — Added D% (discount %) and Remarks columns, row numbers, keyboard navigation (Enter moves to next field, auto-adds row on last field), SearchableSelect for product/supplier, auto-add empty row on product selection.
+- **SearchableSelect improvements** — `onSelect` callback, dropdown opens above when near viewport bottom, keyboard-triggered opening (type to search), focus ring styling.
+
+### Bug Fixes
+- **SearchableSelect dropdown positioning** — Dropdown now opens above the trigger when there isn't enough space below, preventing off-screen clipping.
+- **Purchase invoice view mode** — Empty rows are hidden in view mode; remarks and discount columns display properly.
+
 ## v1.3.0 (2026-06-29)
 
 ### New
