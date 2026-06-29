@@ -82,7 +82,7 @@ export default function InvoicesPanel({ onChanged, initialInvoiceId, onClearInvo
     customer_id: number;
     invoice_type?: string;
     notes?: string;
-    items: Array<{ product_id?: number; product_name?: string; qty: number; rate: number; gst_rate: number }>;
+    items: Array<{ product_id?: number; product_name?: string; qty: number; rate: number; gst_rate: number; discount_pct?: number; remarks?: string }>;
   }) {
     try {
       const res =
@@ -96,7 +96,8 @@ export default function InvoicesPanel({ onChanged, initialInvoiceId, onClearInvo
 
       await load();
       onChanged?.();
-      return { success: true };
+      const invoiceId = res.data?.id;
+      return { success: true, id: invoiceId };
     } catch (e) {
       return { success: false, error: (e as Error).message };
     }
@@ -193,7 +194,7 @@ export default function InvoicesPanel({ onChanged, initialInvoiceId, onClearInvo
                   <td>{inv.customer_name || '—'}</td>
                   <td>₹{inv.total_amount.toLocaleString('en-IN')}</td>
                   <td>₹{inv.total_remaining.toLocaleString('en-IN')}</td>
-                  <td><button className="btn-print" onClick={() => handlePrintInvoice(inv.id)}>Print</button></td>
+                  <td><button className="btn-print" onClick={(e) => { e.stopPropagation(); handlePrintInvoice(inv.id); }}>Print</button></td>
                 </tr>
               ))
             )}
@@ -211,6 +212,8 @@ export default function InvoicesPanel({ onChanged, initialInvoiceId, onClearInvo
           onSave={handleSave}
           onDelete={handleDelete}
           onEdit={() => setMode('edit')}
+          onPrint={(id) => setPrintModal({ open: true, template: 'invoice', id })}
+          onWhatsApp={(id) => setPrintModal({ open: true, template: 'invoice', id })}
         />
       )}
 
@@ -223,6 +226,8 @@ export default function InvoicesPanel({ onChanged, initialInvoiceId, onClearInvo
           onClose={closeModal}
           onSave={handleSave}
           onDelete={handleDelete}
+          onPrint={(id) => setPrintModal({ open: true, template: 'invoice', id })}
+          onWhatsApp={(id) => setPrintModal({ open: true, template: 'invoice', id })}
         />
       )}
 

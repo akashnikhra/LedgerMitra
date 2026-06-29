@@ -2,42 +2,74 @@ import { getDatabase, queryAll, queryOne } from './database';
 import { getActiveCompanyId, getActiveFyId } from './session';
 import type { Receipt, ReceiptAllocation } from '@shared/types';
 
-export function listReceipts(filters?: { customerId?: number; invoiceId?: number; dateFrom?: string; dateTo?: string; method?: string }): (Receipt & { allocation_count: number })[] {
+export function listReceipts(filters?: { customerId?: number; invoiceId?: number; dateFrom?: string; dateTo?: string; method?: string; fyId?: number }): (Receipt & { allocation_count: number; is_legacy?: number })[] {
   const companyId = getActiveCompanyId();
   if (!companyId) return [];
 
-  let sql = `
+  let receiptSql = `
     SELECT r.*, c.name as customer_name,
-           (SELECT COUNT(*) FROM receipt_allocations ra WHERE ra.receipt_id = r.id) as allocation_count
+           (SELECT COUNT(*) FROM receipt_allocations ra WHERE ra.receipt_id = r.id) as allocation_count,
+           0 as is_legacy
     FROM receipts r
     LEFT JOIN customers c ON c.id = r.customer_id
     WHERE r.company_id = ?
   `;
-  const params: unknown[] = [companyId];
+  const receiptParams: unknown[] = [companyId];
 
-  if (filters?.customerId) {
-    sql += ' AND r.customer_id = ?';
-    params.push(filters.customerId);
-  }
-  if (filters?.invoiceId) {
-    sql += ' AND r.id IN (SELECT receipt_id FROM receipt_allocations WHERE invoice_id = ?)';
-    params.push(filters.invoiceId);
-  }
-  if (filters?.dateFrom) {
-    sql += ' AND r.receipt_date >= ?';
-    params.push(filters.dateFrom);
-  }
-  if (filters?.dateTo) {
-    sql += ' AND r.receipt_date <= ?';
-    params.push(filters.dateTo);
-  }
-  if (filters?.method) {
-    sql += ' AND r.payment_method = ?';
-    params.push(filters.method);
-  }
+  if (filters?.customerId) { receiptSql += ' AND r.customer_id = ?'; receiptParams.push(filters.customerId); }
+  if (filters?.invoiceId) { receiptSql += ' AND r.id IN (SELECT receipt_id FROM receipt_allocations WHERE invoice_id = ?)'; receiptParams.push(filters.invoiceId); }
+  if (filters?.dateFrom) { receiptSql += ' AND r.receipt_date >= ?'; receiptParams.push(filters.dateFrom); }
+  if (filters?.dateTo) { receiptSql += ' AND r.receipt_date <= ?'; receiptParams.push(filters.dateTo); }
+  if (filters?.method) { receiptSql += ' AND r.payment_method = ?'; receiptParams.push(filters.method); }
+  if (filters?.fyId) { receiptSql += ' AND r.fy_id = ?'; receiptParams.push(filters.fyId); }
 
-  sql += ' ORDER BY r.receipt_date DESC, r.id DESC';
-  return queryAll(sql, params) as (Receipt & { allocation_count: number })[];
+  let legacySql = `
+    SELECT
+      le.id,
+      'LEGACY-' || le.id as receipt_no,
+      le.customer_id,
+      le.entry_date as receipt_date,
+      le.credit as amount,
+      'LEGACY' as payment_method,
+      NULL as reference_no,
+      NULL as bank_account,
+      le.narration,
+      le.company_id,
+      fy.id as fy_id,
+      le.created_at,
+      c.name as customer_name,
+      0 as allocation_count,
+      1 as is_legacy
+    FROM ledger_entries le
+    LEFT JOIN customers c ON c.id = le.customer_id
+    LEFT JOIN financial_years fy ON le.entry_date BETWEEN fy.start_date AND fy.end_date AND fy.company_id = le.company_id
+    WHERE le.company_id = ?
+      AND le.entry_type = 'PAYMENT'
+      AND le.receipt_id IS NULL
+  `;
+  const legacyParams: unknown[] = [companyId];
+
+  if (filters?.customerId) { legacySql += ' AND le.customer_id = ?'; legacyParams.push(filters.customerId); }
+  if (filters?.dateFrom) { legacySql += ' AND le.entry_date >= ?'; legacyParams.push(filters.dateFrom); }
+  if (filters?.dateTo) { legacySql += ' AND le.entry_date <= ?'; legacyParams.push(filters.dateTo); }
+  if (filters?.fyId) { legacySql += ' AND fy.id = ?'; legacyParams.push(filters.fyId); }
+  if (filters?.method) { legacySql += ' AND 1 = 0'; }
+
+  legacySql += ' ORDER BY le.entry_date DESC, le.id DESC';
+  receiptSql += ' ORDER BY r.receipt_date DESC, r.id DESC';
+
+  const allReceipts = queryAll(receiptSql, receiptParams);
+  const legacyPayments = queryAll(legacySql, legacyParams);
+
+  const combined = [...allReceipts, ...legacyPayments];
+  combined.sort((a, b) => {
+    const dateA = (a.receipt_date || '') as string;
+    const dateB = (b.receipt_date || '') as string;
+    if (dateA !== dateB) return dateB.localeCompare(dateA);
+    return ((b.id || 0) as number) - ((a.id || 0) as number);
+  });
+
+  return combined as (Receipt & { allocation_count: number; is_legacy?: number })[];
 }
 
 export function getReceipt(id: number): { receipt: Receipt; allocations: ReceiptAllocation[] } | null {
@@ -153,6 +185,66 @@ export function createReceipt(data: {
   tx();
 
   return getReceipt(receiptId)!;
+}
+
+export function updateReceipt(id: number, data: {
+  customer_id: number;
+  receipt_date: string;
+  amount: number;
+  payment_method: Receipt['payment_method'];
+  reference_no?: string;
+  bank_account?: string;
+  narration?: string;
+  allocations: { invoice_id: number; allocated_amount: number }[];
+}): { receipt: Receipt; allocations: ReceiptAllocation[] } {
+  const companyId = getActiveCompanyId()!;
+  const db = getDatabase();
+
+  const oldReceipt = queryOne<Receipt>('SELECT * FROM receipts WHERE id = ? AND company_id = ?', [id, companyId]);
+  if (!oldReceipt) throw new Error('Receipt not found');
+
+  if (data.amount <= 0) throw new Error('Receipt amount must be positive');
+  const totalAllocated = data.allocations.reduce((sum, a) => sum + a.allocated_amount, 0);
+  if (totalAllocated > data.amount) throw new Error('Total allocations exceed receipt amount');
+
+  const oldAllocations = queryAll<ReceiptAllocation>('SELECT * FROM receipt_allocations WHERE receipt_id = ?', [id]);
+
+  const tx = db.transaction(() => {
+    for (const alloc of oldAllocations) {
+      db.prepare('UPDATE invoices SET total_remaining = total_remaining + ? WHERE id = ?')
+        .run(alloc.allocated_amount, alloc.invoice_id);
+    }
+
+    db.prepare('UPDATE customers SET current_balance = current_balance + ? WHERE id = ?')
+      .run(oldReceipt.amount, oldReceipt.customer_id);
+
+    db.prepare('DELETE FROM receipt_allocations WHERE receipt_id = ?').run(id);
+    db.prepare('DELETE FROM ledger_entries WHERE receipt_id = ?').run(id);
+
+    db.prepare(
+      `UPDATE receipts SET customer_id = ?, receipt_date = ?, amount = ?, payment_method = ?, reference_no = ?, bank_account = ?, narration = ? WHERE id = ?`
+    ).run(data.customer_id, data.receipt_date, data.amount, data.payment_method, data.reference_no || null, data.bank_account || null, data.narration || null, id);
+
+    for (const alloc of data.allocations) {
+      if (alloc.invoice_id <= 0) continue;
+      db.prepare('INSERT INTO receipt_allocations (receipt_id, invoice_id, allocated_amount) VALUES (?, ?, ?)')
+        .run(id, alloc.invoice_id, alloc.allocated_amount);
+      db.prepare('UPDATE invoices SET total_remaining = total_remaining - ? WHERE id = ?')
+        .run(alloc.allocated_amount, alloc.invoice_id);
+    }
+
+    db.prepare(
+      `INSERT INTO ledger_entries (entry_date, customer_id, entry_type, credit, company_id, narration, receipt_id)
+       VALUES (?, ?, 'RECEIPT', ?, ?, ?, ?)`
+    ).run(data.receipt_date, data.customer_id, data.amount, companyId, data.narration || 'Payment received', id);
+
+    db.prepare('UPDATE customers SET current_balance = current_balance - ? WHERE id = ?')
+      .run(data.amount, data.customer_id);
+  });
+
+  tx();
+
+  return getReceipt(id)!;
 }
 
 export function deleteReceipt(id: number): void {

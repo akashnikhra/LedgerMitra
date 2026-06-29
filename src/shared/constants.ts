@@ -54,6 +54,7 @@ export const IPC_CHANNELS = {
   'receipt:list': 'receipt:list',
   'receipt:get': 'receipt:get',
   'receipt:create': 'receipt:create',
+  'receipt:update': 'receipt:update',
   'receipt:delete': 'receipt:delete',
   'receipt:outstanding': 'receipt:outstanding',
   'receipt:generate-no': 'receipt:generate-no',

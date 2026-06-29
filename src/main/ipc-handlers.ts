@@ -249,6 +249,7 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
   ipcMain.handle(IPC_CHANNELS['receipt:list'], (_e, filters) => receipt.listReceipts(filters));
   ipcMain.handle(IPC_CHANNELS['receipt:get'], (_e, id) => receipt.getReceipt(id));
   ipcMain.handle(IPC_CHANNELS['receipt:create'], (_e, data) => receipt.createReceipt(data));
+  ipcMain.handle(IPC_CHANNELS['receipt:update'], (_e, { id, data }) => receipt.updateReceipt(id, data));
   ipcMain.handle(IPC_CHANNELS['receipt:delete'], (_e, id) => receipt.deleteReceipt(id));
   ipcMain.handle(IPC_CHANNELS['receipt:outstanding'], (_e, customerId) => receipt.getOutstandingInvoices(customerId));
   ipcMain.handle(IPC_CHANNELS['receipt:generate-no'], (_e, date) => receipt.generateReceiptNo(date));
@@ -278,13 +279,31 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
     const paymentSummary = { amountPaid, pendingAmount: invoice.total_amount - amountPaid, previousOutstanding, currentOutstanding };
     return print.renderInvoiceTemplate({ invoice, items, company, customer, paymentSummary });
   });
-  ipcMain.handle(IPC_CHANNELS['print:receipt'], (_e, receiptId: number) => {
+  ipcMain.handle(IPC_CHANNELS['print:receipt'], (_e, receiptId: number | string) => {
     if (!isPremiumFeature('print_pdf')) return '';
-    const r = receipt.getReceipt(receiptId);
-    if (!r) return '';
     const company = print.getCompanyInfo();
-    const customer = getCustomerById(r.receipt.customer_id);
-    return print.renderReceiptTemplate({ receipt: r.receipt, allocations: r.allocations, company, customer });
+    if (typeof receiptId === 'string' && receiptId.startsWith('LEGACY-')) {
+      const ledgerId = parseInt(receiptId.replace('LEGACY-', ''));
+      const entry = queryOne<{ id: number; customer_id: number; entry_date: string; credit: number; narration?: string }>(
+        'SELECT * FROM ledger_entries WHERE id = ?', [ledgerId]
+      );
+      if (!entry) return '';
+      const customer = getCustomerById(entry.customer_id);
+      const receiptData = {
+        receipt_no: `LEGACY-${entry.id}`,
+        customer_id: entry.customer_id,
+        receipt_date: entry.entry_date,
+        amount: entry.credit,
+        payment_method: 'LEGACY',
+        reference_no: null,
+        narration: entry.narration || 'Legacy payment',
+      };
+      return print.renderReceiptTemplate({ receipt: receiptData, allocations: [], company, customer });
+    }
+    const r = receipt.getReceipt(receiptId as number);
+    if (!r) return '';
+    const customer2 = getCustomerById(r.receipt.customer_id);
+    return print.renderReceiptTemplate({ receipt: r.receipt, allocations: r.allocations, company, customer: customer2 });
   });
   ipcMain.handle(IPC_CHANNELS['print:ledger'], (_e, data: { customerId?: number; fyId?: number; entries?: unknown[]; summary?: unknown }) => {
     if (!isPremiumFeature('print_pdf')) return '';
@@ -506,6 +525,8 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
 
     // Output merged DB to userData (writable), not inside app bundle
     const mergeOutputDir = join(app.getPath('userData'), 'Upload', 'Merged');
+    console.log(`[Merge] app.getPath('userData'): ${app.getPath('userData')}`);
+    console.log(`[Merge] mergeOutputDir: ${mergeOutputDir}`);
     if (!existsSync(mergeOutputDir)) {
       mkdirSync(mergeOutputDir, { recursive: true });
     }

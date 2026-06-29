@@ -137,7 +137,7 @@ export async function createInvoice(data: {
   fy_id?: number;
   legacy_amount?: number;
   total_amount?: number;
-  items?: Array<{ product_id?: number; product_name?: string; qty: number; rate: number; gst_rate?: number }>;
+  items?: Array<{ product_id?: number; product_name?: string; qty: number; rate: number; gst_rate?: number; discount_pct?: number; remarks?: string }>;
   notes?: string;
 }): Promise<{ success: boolean; data?: Invoice; error?: string }> {
   try {
@@ -151,12 +151,16 @@ export async function createInvoice(data: {
 
     let subtotal = 0;
     let taxAmount = 0;
+    let totalDiscount = 0;
     const items = data.items || [];
 
     if (items.length > 0) {
       for (const item of items) {
-        const amt = item.qty * item.rate;
+        const lineAmt = item.qty * item.rate;
+        const discountAmt = item.discount_pct ? (lineAmt * item.discount_pct) / 100 : 0;
+        const amt = lineAmt - discountAmt;
         subtotal += amt;
+        totalDiscount += discountAmt;
         const gst = item.gst_rate ? (amt * item.gst_rate) / 100 : 0;
         taxAmount += gst;
       }
@@ -189,8 +193,8 @@ export async function createInvoice(data: {
     const db = getDatabase();
     const insert = db.transaction(() => {
       const r = executeWrite(
-        `INSERT INTO invoices (invoice_no, invoice_type, fy_id, customer_id, invoice_date, subtotal, tax_amount, cgst_amount, sgst_amount, igst_amount, total_amount, total_remaining, company_id, notes)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO invoices (invoice_no, invoice_type, fy_id, customer_id, invoice_date, subtotal, discount, tax_amount, cgst_amount, sgst_amount, igst_amount, total_amount, total_remaining, company_id, notes)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           invoiceNo,
           invoiceType,
@@ -198,6 +202,7 @@ export async function createInvoice(data: {
           data.customer_id,
           data.invoice_date,
           subtotal,
+          totalDiscount,
           taxAmount,
           cgst,
           sgst,
@@ -212,12 +217,14 @@ export async function createInvoice(data: {
       const invoiceId = r.lastInsertRowid as number;
 
       for (const item of items) {
-        const amt = item.qty * item.rate;
+        const lineAmt = item.qty * item.rate;
+        const discountAmt = item.discount_pct ? (lineAmt * item.discount_pct) / 100 : 0;
+        const amt = lineAmt - discountAmt;
         const gstAmt = item.gst_rate ? (amt * item.gst_rate) / 100 : 0;
         db.prepare(
-          `INSERT INTO invoice_items (invoice_id, product_id, product_name, qty, rate, amount, gst_rate, gst_amount)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-        ).run(invoiceId, item.product_id || null, item.product_name || null, item.qty, item.rate, amt, item.gst_rate || null, gstAmt);
+          `INSERT INTO invoice_items (invoice_id, product_id, product_name, qty, rate, amount, gst_rate, gst_amount, discount_pct, remarks)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).run(invoiceId, item.product_id || null, item.product_name || null, item.qty, item.rate, amt, item.gst_rate || null, gstAmt, item.discount_pct || 0, item.remarks || null);
 
         if (item.product_id) {
           if (invoiceType === 'SALE') {
@@ -270,7 +277,7 @@ export function updateInvoice(
     customer_id?: number;
     total_amount?: number;
     notes?: string;
-    items?: Array<{ product_id?: number; product_name?: string; qty: number; rate: number; gst_rate?: number }>;
+    items?: Array<{ product_id?: number; product_name?: string; qty: number; rate: number; gst_rate?: number; discount_pct?: number; remarks?: string }>;
   }
 ): { success: boolean; data?: Invoice; error?: string } {
   try {
@@ -284,12 +291,16 @@ export function updateInvoice(
 
     let subtotal = 0;
     let taxAmount = 0;
+    let totalDiscount = 0;
     const items = data.items || [];
 
     if (items.length > 0) {
       for (const item of items) {
-        const amt = item.qty * item.rate;
+        const lineAmt = item.qty * item.rate;
+        const discountAmt = item.discount_pct ? (lineAmt * item.discount_pct) / 100 : 0;
+        const amt = lineAmt - discountAmt;
         subtotal += amt;
+        totalDiscount += discountAmt;
         const gst = item.gst_rate ? (amt * item.gst_rate) / 100 : 0;
         taxAmount += gst;
       }
@@ -348,7 +359,7 @@ export function updateInvoice(
       executeWrite(
         `UPDATE invoices SET
           invoice_no = ?, customer_id = ?, invoice_date = ?,
-          subtotal = ?, tax_amount = ?, cgst_amount = ?, sgst_amount = ?, igst_amount = ?,
+          subtotal = ?, discount = ?, tax_amount = ?, cgst_amount = ?, sgst_amount = ?, igst_amount = ?,
           total_amount = ?, total_remaining = MAX(0, total_remaining + ?), notes = ?
          WHERE id = ? AND company_id = ?`,
         [
@@ -356,6 +367,7 @@ export function updateInvoice(
           customerId,
           invoiceDate,
           subtotal,
+          totalDiscount,
           taxAmount,
           cgst,
           sgst,
@@ -370,12 +382,14 @@ export function updateInvoice(
 
       db.prepare(`DELETE FROM invoice_items WHERE invoice_id = ?`).run(id);
       for (const item of items) {
-        const amt = item.qty * item.rate;
+        const lineAmt = item.qty * item.rate;
+        const discountAmt = item.discount_pct ? (lineAmt * item.discount_pct) / 100 : 0;
+        const amt = lineAmt - discountAmt;
         const gstAmt = item.gst_rate ? (amt * item.gst_rate) / 100 : 0;
         db.prepare(
-          `INSERT INTO invoice_items (invoice_id, product_id, product_name, qty, rate, amount, gst_rate, gst_amount)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-        ).run(id, item.product_id || null, item.product_name || null, item.qty, item.rate, amt, item.gst_rate || null, gstAmt);
+          `INSERT INTO invoice_items (invoice_id, product_id, product_name, qty, rate, amount, gst_rate, gst_amount, discount_pct, remarks)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).run(id, item.product_id || null, item.product_name || null, item.qty, item.rate, amt, item.gst_rate || null, gstAmt, item.discount_pct || 0, item.remarks || null);
 
         if (item.product_id) {
           if (existing.invoice_type === 'SALE') {

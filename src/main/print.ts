@@ -51,43 +51,50 @@ export function renderInvoiceTemplate(data: Record<string, unknown>): string {
     statusColor = '#f59e0b';
   }
 
-  const rows = items.map((item, i) => `
+  const validItems = items.filter((item) => item.product_id || item.product_name || Number(item.amount) > 0);
+
+  const rows = validItems.map((item, i) => {
+    const dPct = Number(item.discount_pct) || 0;
+    const remarks = item.remarks ? escapeHtml(String(item.remarks)) : '';
+    return `
     <tr>
       <td>${i + 1}</td>
       <td>${escapeHtml(String(item.product_name || item.product_id || ''))}</td>
       <td style="text-align:right">${Number(item.qty).toLocaleString('en-IN')}</td>
       <td style="text-align:right">${formatCurrency(Number(item.rate))}</td>
       <td style="text-align:right">${item.gst_rate ? `${escapeHtml(String(item.gst_rate))}%` : '-'}</td>
+      <td style="text-align:right">${dPct > 0 ? `${dPct}%` : '-'}</td>
+      <td style="text-align:right">${remarks}</td>
       <td style="text-align:right">${formatCurrency(Number(item.amount))}</td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
 
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><title>Invoice ${escapeHtml(String(invoice.invoice_no))}</title>
 <style>
-  body { font-family: 'JetBrains Mono', monospace; font-size: 11px; margin: 0; padding: 20mm; color: #1a1a1a; }
-  .header { display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 2px solid #1a1a1a; padding-bottom: 10px; }
-  .company-name { font-size: 18px; font-weight: bold; }
-  .invoice-title { font-size: 16px; font-weight: bold; text-align: right; }
-  .invoice-no { font-size: 14px; color: #666; }
-  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-  .info-block h4 { margin: 0 0 5px; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-  th, td { border: 1px solid #333; padding: 6px 8px; text-align: left; }
+  body { font-family: 'JetBrains Mono', monospace; font-size: 10px; margin: 0; padding: 10mm; color: #1a1a1a; }
+  .header { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 2px solid #1a1a1a; padding-bottom: 8px; }
+  .company-name { font-size: 15px; font-weight: bold; }
+  .invoice-title { font-size: 14px; font-weight: bold; text-align: right; }
+  .invoice-no { font-size: 12px; color: #666; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .info-block h4 { margin: 0 0 4px; border-bottom: 1px solid #ccc; padding-bottom: 2px; font-size: 10px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+  th, td { border: 1px solid #333; padding: 4px 6px; text-align: left; }
   th { background: #f5f5f5; font-weight: bold; }
-  .totals { text-align: right; margin-bottom: 20px; }
-  .totals div { margin: 3px 0; }
-  .totals .total { font-size: 14px; font-weight: bold; border-top: 2px solid #1a1a1a; padding-top: 5px; }
-  .payment-summary { border: 1px solid #333; padding: 10px; margin-bottom: 20px; background: #fafafa; }
-  .payment-summary h4 { margin: 0 0 8px; }
-  .payment-summary .row { display: flex; justify-content: space-between; margin: 3px 0; }
+  .totals { text-align: right; margin-bottom: 12px; }
+  .totals div { margin: 2px 0; }
+  .totals .total { font-size: 12px; font-weight: bold; border-top: 2px solid #1a1a1a; padding-top: 4px; }
+  .payment-summary { border: 1px solid #333; padding: 8px; margin-bottom: 12px; background: #fafafa; }
+  .payment-summary h4 { margin: 0 0 6px; font-size: 10px; }
+  .payment-summary .row { display: flex; justify-content: space-between; margin: 2px 0; }
   .payment-summary .pending { font-weight: bold; color: #ef4444; }
   .payment-summary .paid { color: #22c55e; }
-  .status-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; color: white; font-size: 10px; font-weight: bold; background: ${statusColor}; }
-  .footer { margin-top: 40px; display: flex; justify-content: space-between; }
-  .signature { border-top: 1px solid #333; padding-top: 5px; width: 150px; text-align: center; }
-  @media print { body { padding: 10mm; } }
+  .status-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; color: white; font-size: 9px; font-weight: bold; background: ${statusColor}; }
+  .footer { margin-top: 24px; display: flex; justify-content: space-between; font-size: 9px; }
+  .signature { border-top: 1px solid #333; padding-top: 4px; width: 120px; text-align: center; }
+  @media print { body { padding: 8mm; } @page { size: A5; } }
 </style></head>
 <body>
   <div class="header">
@@ -119,7 +126,7 @@ export function renderInvoiceTemplate(data: Record<string, unknown>): string {
     </div>
   </div>
   <table>
-    <thead><tr><th>#</th><th>Product</th><th style="text-align:right">Qty</th><th style="text-align:right">Rate</th><th style="text-align:right">GST</th><th style="text-align:right">Amount</th></tr></thead>
+    <thead><tr><th>#</th><th>Product</th><th style="text-align:right">Qty</th><th style="text-align:right">Rate</th><th style="text-align:right">GST</th><th style="text-align:right">D%</th><th>Remarks</th><th style="text-align:right">Amount</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>
   <div class="totals">
@@ -161,19 +168,20 @@ export function renderReceiptTemplate(data: Record<string, unknown>): string {
 <html>
 <head><meta charset="utf-8"><title>Receipt ${escapeHtml(String(receipt.receipt_no))}</title>
 <style>
-  body { font-family: 'JetBrains Mono', monospace; font-size: 11px; margin: 0; padding: 20mm; color: #1a1a1a; }
-  .header { display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 2px solid #1a1a1a; padding-bottom: 10px; }
-  .company-name { font-size: 18px; font-weight: bold; }
-  .title { font-size: 16px; font-weight: bold; text-align: right; }
-  table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-  th, td { border: 1px solid #333; padding: 6px 8px; }
+  body { font-family: 'JetBrains Mono', monospace; font-size: 10px; margin: 0; padding: 10mm; color: #1a1a1a; }
+  .header { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 2px solid #1a1a1a; padding-bottom: 8px; }
+  .company-name { font-size: 15px; font-weight: bold; }
+  .title { font-size: 14px; font-weight: bold; text-align: right; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+  th, td { border: 1px solid #333; padding: 4px 6px; }
   th { background: #f5f5f5; }
-  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-  .detail-row { display: flex; justify-content: space-between; margin: 5px 0; }
-  .amount { font-size: 18px; font-weight: bold; margin: 10px 0; }
-  .footer { margin-top: 40px; text-align: right; }
-  .signature { border-top: 1px solid #333; padding-top: 5px; width: 150px; display: inline-block; text-align: center; }
-  @media print { body { padding: 10mm; } }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .detail-grid h4 { margin: 0 0 4px; font-size: 10px; }
+  .detail-row { display: flex; justify-content: space-between; margin: 3px 0; }
+  .amount { font-size: 15px; font-weight: bold; margin: 8px 0; }
+  .footer { margin-top: 24px; text-align: right; }
+  .signature { border-top: 1px solid #333; padding-top: 4px; width: 120px; display: inline-block; text-align: center; }
+  @media print { body { padding: 8mm; } @page { size: A5; } }
 </style></head>
 <body>
   <div class="header">
@@ -224,9 +232,12 @@ export function renderLedgerTemplate(data: Record<string, unknown>): string {
   const closingBalance = Number(data.closingBalance) || 0;
   const summary = data.summary as Record<string, unknown>;
 
+  const showCustomerCol = !customer && entries.length > 0 && entries[0]?.customer_name;
+
   const rows = entries.map(e => `
     <tr>
       <td>${formatDate(String(e.date || e.entry_date))}</td>
+      ${showCustomerCol ? `<td>${escapeHtml(String(e.customer_name || '-'))}</td>` : ''}
       <td>${escapeHtml(String(e.reference_no || e.receipt_no || e.invoice_no || '-'))}</td>
       <td>${escapeHtml(String(e.type || e.entry_type))}</td>
       <td style="text-align:right">${e.debit ? formatCurrency(Number(e.debit)) : '-'}</td>
@@ -235,9 +246,13 @@ export function renderLedgerTemplate(data: Record<string, unknown>): string {
     </tr>
   `).join('');
 
+  const colSpan = showCustomerCol ? 7 : 6;
+  const title = customer ? 'LEDGER' : 'ALL LEDGERS';
+  const subtitle = customer ? `Customer: ${escapeHtml(String(customer.name))}` : 'All Customers';
+
   return `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Ledger</title>
+<head><meta charset="utf-8"><title>${title}</title>
 <style>
   body { font-family: 'JetBrains Mono', monospace; font-size: 10px; margin: 0; padding: 15mm; color: #1a1a1a; }
   .header { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 2px solid #1a1a1a; padding-bottom: 10px; }
@@ -246,6 +261,7 @@ export function renderLedgerTemplate(data: Record<string, unknown>): string {
   table { width: 100%; border-collapse: collapse; margin: 10px 0; }
   th, td { border: 1px solid #333; padding: 4px 6px; }
   th { background: #f5f5f5; }
+  .customer-col { min-width: 100px; }
   .footer-totals { margin-top: 15px; padding-top: 10px; border-top: 2px solid #1a1a1a; }
   .detail-row { display: flex; justify-content: space-between; margin: 3px 0; }
   @media print { body { padding: 10mm; } @page { size: A4 landscape; } }
@@ -257,36 +273,37 @@ export function renderLedgerTemplate(data: Record<string, unknown>): string {
       <div>${escapeHtml(company?.address || '')}</div>
     </div>
     <div>
-      <div class="title">LEDGER</div>
+      <div class="title">${title}</div>
       <div>${escapeHtml(fy?.name || '')}</div>
-      <div>${customer ? `Customer: ${escapeHtml(String(customer.name))}` : 'All Customers'}</div>
+      <div>${subtitle}</div>
     </div>
   </div>
   <table>
-    <thead><tr><th>Date</th><th>Ref No</th><th>Type</th><th style="text-align:right">Debit</th><th style="text-align:right">Credit</th><th style="text-align:right">Balance</th></tr></thead>
+    <thead><tr><th>Date</th>${showCustomerCol ? '<th class="customer-col">Customer</th>' : ''}<th>Ref No</th><th>Type</th><th style="text-align:right">Debit</th><th style="text-align:right">Credit</th><th style="text-align:right">Balance</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>
   <div class="footer-totals">
-    <div class="detail-row"><span>Opening Balance:</span><span>${formatCurrency(openingBalance)}</span></div>
-    <div class="detail-row"><span>Closing Balance:</span><span>${formatCurrency(closingBalance)}</span></div>
     ${summary ? `
       <div class="detail-row"><span>Total Debits:</span><span>${formatCurrency(Number(summary.totalDebit) || 0)}</span></div>
       <div class="detail-row"><span>Total Credits:</span><span>${formatCurrency(Number(summary.totalCredit) || 0)}</span></div>
-    ` : ''}
+    ` : `
+      <div class="detail-row"><span>Opening Balance:</span><span>${formatCurrency(openingBalance)}</span></div>
+      <div class="detail-row"><span>Closing Balance:</span><span>${formatCurrency(closingBalance)}</span></div>
+    `}
   </div>
   <div style="margin-top:20px;font-size:9px;color:#666">Printed: ${escapeHtml(new Date().toLocaleString('en-IN'))}</div>
 </body></html>`;
 }
 
-export async function generatePdf(html: string, options?: { pageSize?: 'A4' | 'Letter'; landscape?: boolean }): Promise<Buffer> {
+export async function generatePdf(html: string, options?: { pageSize?: 'A4' | 'A5' | 'Letter'; landscape?: boolean }): Promise<Buffer> {
   const win = new BrowserWindow({ show: false, width: 800, height: 600 });
   try {
     await win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
 
     const pdf = await win.webContents.printToPDF({
-      pageSize: options?.pageSize || 'A4',
+      pageSize: options?.pageSize || 'A5',
       landscape: options?.landscape || false,
-      margin: { top: '10mm', bottom: '10mm', left: '10mm', right: '10mm' }
+      margin: { top: '8mm', bottom: '8mm', left: '8mm', right: '8mm' }
     });
 
     return pdf;

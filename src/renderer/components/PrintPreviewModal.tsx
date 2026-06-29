@@ -4,7 +4,7 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   template: string;
-  id: number;
+  id: number | string;
   ledgerData?: { customerId?: number; fyId?: number; entries?: unknown[]; summary?: unknown };
 }
 

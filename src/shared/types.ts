@@ -103,6 +103,8 @@ export interface InvoiceItem {
   amount: number;
   gst_rate?: number;
   gst_amount?: number;
+  discount_pct?: number;
+  remarks?: string;
 }
 
 export interface PurchaseInvoice {

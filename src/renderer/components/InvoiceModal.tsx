@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import type { Customer, Invoice, Product } from '@shared/types';
 import SearchableSelect from './SearchableSelect';
 
@@ -10,6 +10,8 @@ interface ItemRow {
   qty: number;
   rate: number;
   gst_rate: number;
+  discount_pct: number;
+  remarks: string;
 }
 
 interface InvoiceModalProps {
@@ -24,11 +26,15 @@ interface InvoiceModalProps {
     customer_id: number;
     invoice_type?: string;
     notes?: string;
-    items: Array<{ product_id?: number; product_name?: string; qty: number; rate: number; gst_rate: number }>;
-  }) => Promise<{ success: boolean; error?: string }>;
+    items: Array<{ product_id?: number; product_name?: string; qty: number; rate: number; gst_rate: number; discount_pct?: number; remarks?: string }>;
+  }) => Promise<{ success: boolean; error?: string; id?: number }>;
   onDelete: (id: number) => Promise<{ success: boolean; error?: string }>;
   onEdit?: () => void;
+  onPrint?: (id: number) => void;
+  onWhatsApp?: (id: number) => void;
 }
+
+const emptyItem = { product_id: undefined, product_name: '', qty: 1, rate: 0, gst_rate: 0, discount_pct: 0, remarks: '' };
 
 const emptyForm = {
   invoice_no: '',
@@ -46,12 +52,16 @@ export default function InvoiceModal({
   onClose,
   onSave,
   onDelete,
-  onEdit
+  onEdit,
+  onPrint,
+  onWhatsApp
 }: InvoiceModalProps) {
   const [form, setForm] = useState(emptyForm);
   const [items, setItems] = useState<ItemRow[]>([]);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [postSaveId, setPostSaveId] = useState<number | null>(null);
+  const qtyRefs = useRef<Map<number, HTMLInputElement | null>>(new Map());
 
   useEffect(() => {
     if (mode === 'create') {
@@ -60,7 +70,7 @@ export default function InvoiceModal({
         invoice_date: new Date().toISOString().slice(0, 10),
         customer_id: customers.length > 0 ? String(customers[0].id) : ''
       });
-      setItems([]);
+      setItems([{ ...emptyItem }]);
     } else if (invoice) {
       setForm({
         invoice_no: invoice.invoice_no,
@@ -77,7 +87,9 @@ export default function InvoiceModal({
             product_name: item.product_name || '',
             qty: item.qty,
             rate: item.rate,
-            gst_rate: item.gst_rate || 0
+            gst_rate: item.gst_rate || 0,
+            discount_pct: item.discount_pct || 0,
+            remarks: item.remarks || ''
           }))
         );
       });
@@ -85,35 +97,83 @@ export default function InvoiceModal({
   }, [mode, invoice, customers]);
 
   function addItem() {
-    setItems([...items, { product_id: undefined, product_name: '', qty: 1, rate: 0, gst_rate: 0 }]);
+    setItems([...items, { ...emptyItem }]);
   }
 
   function removeItem(index: number) {
-    setItems(items.filter((_, i) => i !== index));
+    const updated = items.filter((_, i) => i !== index);
+    // Always keep at least one row in create/edit mode
+    if (mode !== 'view' && updated.length === 0) {
+      updated.push({ ...emptyItem });
+    }
+    setItems(updated);
   }
 
-  function updateItem(index: number, field: keyof ItemRow, value: number | undefined | string) {
-    const updated = [...items];
-    updated[index] = { ...updated[index], [field]: value };
+  const updateItem = useCallback((index: number, field: keyof ItemRow, value: number | undefined | string) => {
+    setItems(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
 
-    if (field === 'product_id' && typeof value === 'number') {
-      const product = products.find((p) => p.id === value);
-      if (product) {
-        updated[index].product_name = product.name;
-        updated[index].rate = product.selling_rate || 0;
-        updated[index].gst_rate = product.gst_rate || 0;
+      if (field === 'product_id' && typeof value === 'number') {
+        const product = products.find((p) => p.id === value);
+        if (product) {
+          updated[index].product_name = product.name;
+          updated[index].rate = product.selling_rate || 0;
+          updated[index].gst_rate = product.gst_rate || 0;
+        }
+        // Auto-add empty row if product selected in last row
+        if (index === updated.length - 1) {
+          updated.push({ ...emptyItem });
+        }
+      }
+
+      return updated;
+    });
+  }, [products]);
+
+  function handleItemKeyDown(e: React.KeyboardEvent, rowIdx: number, field: 'qty' | 'rate' | 'gst' | 'discount') {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (field === 'qty') {
+        const rateInput = (e.target as HTMLElement).closest('tr')?.querySelector('.col-rate input') as HTMLInputElement;
+        rateInput?.focus();
+        rateInput?.select();
+      } else if (field === 'rate') {
+        const gstInput = (e.target as HTMLElement).closest('tr')?.querySelector('.col-gst input') as HTMLInputElement;
+        gstInput?.focus();
+        gstInput?.select();
+      } else if (field === 'gst') {
+        const discountInput = (e.target as HTMLElement).closest('tr')?.querySelector('.col-discount input') as HTMLInputElement;
+        discountInput?.focus();
+        discountInput?.select();
+      } else if (field === 'discount') {
+        if (rowIdx === items.length - 1) {
+          setItems(prev => [...prev, { ...emptyItem }]);
+          setTimeout(() => {
+            const nextQty = qtyRefs.current.get(rowIdx + 1);
+            nextQty?.focus();
+            nextQty?.select();
+          }, 0);
+        } else {
+          const nextQty = qtyRefs.current.get(rowIdx + 1);
+          nextQty?.focus();
+          nextQty?.select();
+        }
       }
     }
-
-    setItems(updated);
   }
 
   function calcTotals() {
     let subtotal = 0;
     let taxAmount = 0;
+    let totalDiscount = 0;
     for (const item of items) {
-      const amt = item.qty * item.rate;
+      if (!item.product_id && item.qty <= 0 && item.rate <= 0) continue;
+      const lineAmt = item.qty * item.rate;
+      const discountAmt = item.discount_pct ? (lineAmt * item.discount_pct) / 100 : 0;
+      const amt = lineAmt - discountAmt;
       subtotal += amt;
+      totalDiscount += discountAmt;
       taxAmount += item.gst_rate ? (amt * item.gst_rate) / 100 : 0;
     }
     const selectedCustomer = customers.find((c) => c.id === parseInt(form.customer_id, 10));
@@ -129,7 +189,7 @@ export default function InvoiceModal({
         igst = taxAmount;
       }
     }
-    return { subtotal, taxAmount, cgst, sgst, igst, total: subtotal + taxAmount };
+    return { subtotal, taxAmount, cgst, sgst, igst, total: subtotal + taxAmount, totalDiscount };
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -147,14 +207,17 @@ export default function InvoiceModal({
       return;
     }
 
-    const { subtotal, total } = calcTotals();
+    // Filter out empty rows (no product and zero amounts)
+    const filledItems = items.filter(item => item.product_id || item.qty > 0 || item.rate > 0);
 
-    if (items.length > 0 && total <= 0) {
-      setError('Enter valid item quantities and rates');
+    if (filledItems.length === 0) {
+      setError('Add at least one item');
       return;
     }
-    if (items.length === 0) {
-      setError('Add at least one item');
+
+    const { total } = calcTotals();
+    if (total <= 0) {
+      setError('Enter valid item quantities and rates');
       return;
     }
 
@@ -164,12 +227,14 @@ export default function InvoiceModal({
       customer_id: customerId,
       invoice_type: form.invoice_type,
       notes: form.notes.trim() || undefined,
-      items: items.map((item) => ({
+      items: filledItems.map((item) => ({
         product_id: item.product_id,
         product_name: item.product_name,
         qty: item.qty,
         rate: item.rate,
-        gst_rate: item.gst_rate
+        gst_rate: item.gst_rate,
+        discount_pct: item.discount_pct || 0,
+        remarks: item.remarks || ''
       }))
     };
 
@@ -182,7 +247,11 @@ export default function InvoiceModal({
       return;
     }
 
-    onClose();
+    if (mode === 'create' && res.id) {
+      setPostSaveId(res.id);
+    } else {
+      onClose();
+    }
   }
 
   async function handleDelete() {
@@ -195,12 +264,12 @@ export default function InvoiceModal({
     onClose();
   }
 
-  const { subtotal, taxAmount, cgst, sgst, igst, total } = calcTotals();
+  const { subtotal, taxAmount, cgst, sgst, igst, total, totalDiscount } = calcTotals();
   const selectedCustomer = customers.find((c) => c.id === parseInt(form.customer_id, 10));
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-content modal-wide" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>
             {mode === 'create' ? 'New Invoice' : mode === 'edit' ? 'Edit Invoice' : 'View Invoice'}
@@ -289,19 +358,26 @@ export default function InvoiceModal({
                   <table className="items-table">
                     <thead>
                       <tr>
+                        {mode !== 'view' && <th className="col-row-num">#</th>}
                         <th className="col-product">Product</th>
                         <th className="col-qty">Qty</th>
                         <th className="col-rate">Rate</th>
                         <th className="col-gst">GST%</th>
+                        <th className="col-discount">D%</th>
                         <th className="col-amount">Amount</th>
+                        {mode !== 'view' && <th className="col-remarks">Remarks</th>}
                         {mode !== 'view' && <th className="col-action"></th>}
                       </tr>
                     </thead>
                     <tbody>
-                      {items.map((item, idx) => {
-                        const amt = item.qty * item.rate;
+                      {(mode === 'view' ? items.filter(item => item.product_id || (item.qty > 0 && item.rate > 0)) : items).map((item, idx) => {
+                        const lineAmt = item.qty * item.rate;
+                        const discountAmt = item.discount_pct ? (lineAmt * item.discount_pct) / 100 : 0;
+                        const amt = lineAmt - discountAmt;
+                        const hasProduct = !!item.product_id;
                         return (
-                          <tr key={idx}>
+                          <tr key={idx} className={hasProduct ? '' : 'row-empty'}>
+                            {mode !== 'view' && <td className="col-row-num">{idx + 1}</td>}
                             <td className="col-product">
                               {mode === 'view' ? (
                                 <span className="product-name" title={item.product_name || '—'}>
@@ -314,6 +390,10 @@ export default function InvoiceModal({
                                   onChange={(v) => updateItem(idx, 'product_id', v as number)}
                                   placeholder="Select product"
                                   dropdownWidth={320}
+                                  onSelect={() => {
+                                    const qtyInput = qtyRefs.current.get(idx);
+                                    if (qtyInput) { qtyInput.focus(); qtyInput.select(); }
+                                  }}
                                 />
                               )}
                             </td>
@@ -322,10 +402,12 @@ export default function InvoiceModal({
                                 <span className="text-right">{item.qty}</span>
                               ) : (
                                 <input
+                                  ref={(el) => { if (el) qtyRefs.current.set(idx, el); }}
                                   type="number"
                                   min="1"
                                   value={item.qty}
                                   onChange={(e) => updateItem(idx, 'qty', parseInt(e.target.value, 10) || 0)}
+                                  onKeyDown={(e) => handleItemKeyDown(e, idx, 'qty')}
                                 />
                               )}
                             </td>
@@ -339,6 +421,7 @@ export default function InvoiceModal({
                                   min="0"
                                   value={item.rate}
                                   onChange={(e) => updateItem(idx, 'rate', parseFloat(e.target.value) || 0)}
+                                  onKeyDown={(e) => handleItemKeyDown(e, idx, 'rate')}
                                 />
                               )}
                             </td>
@@ -352,10 +435,37 @@ export default function InvoiceModal({
                                   min="0"
                                   value={item.gst_rate}
                                   onChange={(e) => updateItem(idx, 'gst_rate', parseFloat(e.target.value) || 0)}
+                                  onKeyDown={(e) => handleItemKeyDown(e, idx, 'gst')}
+                                />
+                              )}
+                            </td>
+                            <td className="col-discount">
+                              {mode === 'view' ? (
+                                <span className="text-right">{item.discount_pct > 0 ? `${item.discount_pct}%` : '—'}</span>
+                              ) : (
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  max="100"
+                                  value={item.discount_pct || ''}
+                                  placeholder="0"
+                                  onChange={(e) => updateItem(idx, 'discount_pct', parseFloat(e.target.value) || 0)}
+                                  onKeyDown={(e) => handleItemKeyDown(e, idx, 'discount')}
                                 />
                               )}
                             </td>
                             <td className="col-amount text-right">₹{amt.toFixed(2)}</td>
+                            {mode !== 'view' && (
+                              <td className="col-remarks">
+                                <input
+                                  type="text"
+                                  value={item.remarks || ''}
+                                  placeholder="—"
+                                  onChange={(e) => updateItem(idx, 'remarks', e.target.value)}
+                                />
+                              </td>
+                            )}
                             {mode !== 'view' && (
                               <td className="col-action">
                                 <button type="button" className="btn-remove" onClick={() => removeItem(idx)}>
@@ -377,6 +487,12 @@ export default function InvoiceModal({
 
               {items.length > 0 && (
                 <div className="totals-section">
+                  {totalDiscount > 0 && (
+                    <div className="total-row">
+                      <span>Discount:</span>
+                      <span>-₹{totalDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="total-row">
                     <span>Subtotal:</span>
                     <span>₹{subtotal.toFixed(2)}</span>
@@ -424,6 +540,26 @@ export default function InvoiceModal({
             )}
           </form>
         </div>
+
+        {postSaveId && (
+          <div className="post-save-overlay">
+            <div className="post-save-dialog">
+              <h3>Invoice Created</h3>
+              <p>What would you like to do?</p>
+              <div className="post-save-actions">
+                <button type="button" className="btn" onClick={() => { onPrint?.(postSaveId); onClose(); }}>
+                  Print
+                </button>
+                <button type="button" className="btn btn-secondary" onClick={() => { onWhatsApp?.(postSaveId); onClose(); }}>
+                  Send WhatsApp
+                </button>
+                <button type="button" className="btn btn-secondary" onClick={onClose}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="modal-footer">
           {mode === 'view' ? (

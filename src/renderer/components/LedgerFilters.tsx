@@ -13,10 +13,10 @@ export default function LedgerFilters({ customers, selectedCustomer, selectedYea
   return (
     <div className="panel-filters">
       <SearchableSelect
-        options={customers.map(c => ({ value: c.id, label: c.name }))}
+        options={[{ value: 0, label: 'All Customers' }, ...customers.map(c => ({ value: c.id, label: c.name }))]}
         value={selectedCustomer}
         onChange={(v) => onCustomerChange(String(v))}
-        placeholder="Select customer"
+        placeholder="All Customers"
       />
       <select className="input" value={selectedYear} onChange={e => onYearChange(e.target.value)}>
         <option value="">All years</option>

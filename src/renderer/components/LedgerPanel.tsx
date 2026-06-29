@@ -4,7 +4,7 @@ import LedgerTable from './LedgerTable';
 import LedgerSummary from './LedgerSummary';
 import PrintPreviewModal from './PrintPreviewModal';
 
-interface LedgerEntry { id: number; date: string; type: string; reference_no: string; debit: number; credit: number; balance: number; invoice_no?: string; invoice_id?: number; }
+interface LedgerEntry { id: number; date: string; type: string; reference_no: string; debit: number; credit: number; balance: number; invoice_no?: string; invoice_id?: number; customer_name?: string; customer_id?: number; }
 interface Customer { id: number; name: string; }
 interface FinancialYear { id: number; name: string; start_date: string; end_date: string; }
 
@@ -28,7 +28,7 @@ export default function LedgerPanel({ onChanged, companyId, activeFY }: Props) {
   const [printModal, setPrintModal] = useState<{ open: boolean; template: string; id: number; ledgerData?: { customerId?: number; fyId?: number; entries?: unknown[]; summary?: unknown } }>({ open: false, template: '', id: 0 });
 
   useEffect(() => { loadCustomers(); loadFinancialYears(); }, []);
-  useEffect(() => { if (selectedCustomer) loadLedger(); }, [selectedCustomer, selectedYear]);
+  useEffect(() => { loadLedger(); }, [selectedCustomer, selectedYear]);
 
   async function loadCustomers() {
     const custs = await window.electronAPI.getCustomers();
@@ -55,7 +55,7 @@ export default function LedgerPanel({ onChanged, companyId, activeFY }: Props) {
     return { openingBalance, totalDebit, totalCredit, closingBalance, invoiceCount, receiptCount };
   }
 
-  function mapEntries(raw: { entry_date?: string; entry_type?: string; invoice_no?: string; receipt_no?: string; invoice_id?: number; debit?: number; credit?: number; balance?: number; id: number }[]): LedgerEntry[] {
+  function mapEntries(raw: { entry_date?: string; entry_type?: string; invoice_no?: string; receipt_no?: string; invoice_id?: number; debit?: number; credit?: number; balance?: number; id: number; customer_name?: string; customer_id?: number }[]): LedgerEntry[] {
     return raw.map(e => ({
       id: e.id,
       date: e.entry_date || '',
@@ -66,13 +66,15 @@ export default function LedgerPanel({ onChanged, companyId, activeFY }: Props) {
       balance: e.balance || 0,
       invoice_no: e.invoice_no || undefined,
       invoice_id: e.invoice_id || undefined,
+      customer_name: e.customer_name || undefined,
+      customer_id: e.customer_id || undefined,
     }));
   }
 
   async function loadLedger() {
     setLoading(true);
     try {
-      const custId = parseInt(selectedCustomer);
+      const custId = parseInt(selectedCustomer) || undefined;
       if (selectedYear) {
         const result = await window.electronAPI.getYearLedger(parseInt(selectedYear), custId);
         const mapped = mapEntries(result?.entries || []);
@@ -90,26 +92,31 @@ export default function LedgerPanel({ onChanged, companyId, activeFY }: Props) {
         } else {
           setSummary(null);
         }
-      } else {
+      } else if (custId) {
         const result = await window.electronAPI.getCustomerLedger(custId);
         const mapped = mapEntries(result?.entries || []);
         setEntries(mapped);
         setSummary(computeSummary(mapped, result?.openingBalance || 0, result?.closingBalance || 0));
+      } else {
+        const result = await window.electronAPI.getLedger();
+        const mapped = mapEntries(result || []);
+        setEntries(mapped);
+        setSummary(computeSummary(mapped, 0, 0));
       }
     } catch (e) { console.error('Failed to load ledger:', e); }
     finally { setLoading(false); }
   }
 
   function handlePrintLedger() {
-    const custId = parseInt(selectedCustomer);
+    const custId = parseInt(selectedCustomer) || undefined;
     const fyId = selectedYear ? parseInt(selectedYear) : undefined;
-    setPrintModal({ open: true, template: 'ledger', id: 0, ledgerData: { customerId: custId || undefined, fyId, entries, summary } });
+    setPrintModal({ open: true, template: 'ledger', id: 0, ledgerData: { customerId: custId, fyId, entries, summary } });
   }
 
   return (
     <div className="panel">
       <div className="panel-header">
-        <h2>Customer Ledger</h2>
+        <h2>{selectedCustomer ? 'Customer Ledger' : 'All Ledgers'}</h2>
         <button className="btn btn-sm" onClick={handlePrintLedger}>Print Ledger</button>
       </div>
       <LedgerFilters
@@ -128,6 +135,7 @@ export default function LedgerPanel({ onChanged, companyId, activeFY }: Props) {
             customerId={selectedCustomer ? parseInt(selectedCustomer) : undefined}
             customerName={customers.find(c => c.id === parseInt(selectedCustomer))?.name}
             companyId={companyId}
+            showCustomerColumn={!selectedCustomer}
           />
         </>
       )}

@@ -12,6 +12,8 @@ interface LedgerEntry {
   invoice_no?: string;
   invoice_id?: number;
   fy_source_id?: number;
+  customer_name?: string;
+  customer_id?: number;
 }
 
 interface Props {
@@ -19,9 +21,10 @@ interface Props {
   customerId?: number;
   customerName?: string;
   companyId?: number;
+  showCustomerColumn?: boolean;
 }
 
-export default function LedgerTable({ entries, customerId, customerName, companyId }: Props) {
+export default function LedgerTable({ entries, customerId, customerName, companyId, showCustomerColumn }: Props) {
   const [traceModal, setTraceModal] = useState<{ open: boolean; customerId: number; customerName: string }>({
     open: false, customerId: 0, customerName: ''
   });
@@ -32,21 +35,26 @@ export default function LedgerTable({ entries, customerId, customerName, company
     return entry.type;
   }
 
+  const colSpan = (showCustomerColumn ? 1 : 0) + (customerId ? 1 : 0) + 6;
+
   return (
     <>
       <table className="ledger-table">
         <thead>
           <tr>
-            <th>Date</th><th>Type</th><th>Reference</th><th>Debit</th><th>Credit</th><th>Balance</th>
+            <th>Date</th>
+            {showCustomerColumn && <th>Customer</th>}
+            <th>Type</th><th>Reference</th><th>Debit</th><th>Credit</th><th>Balance</th>
             {customerId && <th></th>}
           </tr>
         </thead>
         <tbody>
           {entries.length === 0 ? (
-            <tr><td colSpan={customerId ? 7 : 6} className="muted">No entries found.</td></tr>
+            <tr><td colSpan={colSpan} className="muted">No entries found.</td></tr>
           ) : entries.map(entry => (
             <tr key={entry.id}>
               <td>{entry.date}</td>
+              {showCustomerColumn && <td>{entry.customer_name || '-'}</td>}
               <td>{renderType(entry)}</td>
               <td>{entry.reference_no || '-'}</td>
               <td className={entry.debit > 0 ? 'debit' : ''}>{entry.debit > 0 ? `₹${format(entry.debit)}` : '-'}</td>

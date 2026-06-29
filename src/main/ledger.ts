@@ -7,13 +7,18 @@ export function getLedgerEntries(customerId?: number): LedgerEntry[] {
   if (!companyId) return [];
   if (customerId) {
     return queryAll<LedgerEntry>(
-      `SELECT * FROM ledger_entries WHERE company_id = ? AND customer_id = ?
-       ORDER BY entry_date DESC, id DESC`,
+      `SELECT le.*, c.name as customer_name FROM ledger_entries le
+       LEFT JOIN customers c ON c.id = le.customer_id
+       WHERE le.company_id = ? AND le.customer_id = ?
+       ORDER BY le.entry_date DESC, le.id DESC`,
       [companyId, customerId]
     );
   }
   return queryAll<LedgerEntry>(
-    'SELECT * FROM ledger_entries WHERE company_id = ? ORDER BY entry_date DESC, id DESC',
+    `SELECT le.*, c.name as customer_name FROM ledger_entries le
+     LEFT JOIN customers c ON c.id = le.customer_id
+     WHERE le.company_id = ?
+     ORDER BY le.entry_date DESC, le.id DESC`,
     [companyId]
   );
 }

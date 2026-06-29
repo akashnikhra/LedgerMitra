@@ -108,6 +108,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getReceipts: (filters?: unknown) => ipcRenderer.invoke(IPC_CHANNELS['receipt:list'], filters),
   getReceipt: (id: number) => ipcRenderer.invoke(IPC_CHANNELS['receipt:get'], id),
   createReceipt: (data: unknown) => ipcRenderer.invoke(IPC_CHANNELS['receipt:create'], data),
+  updateReceipt: (id: number, data: unknown) => ipcRenderer.invoke(IPC_CHANNELS['receipt:update'], { id, data }),
   deleteReceipt: (id: number) => ipcRenderer.invoke(IPC_CHANNELS['receipt:delete'], id),
   getOutstandingInvoices: (customerId: number) => ipcRenderer.invoke(IPC_CHANNELS['receipt:outstanding'], customerId),
   generateReceiptNo: (date: string) => ipcRenderer.invoke(IPC_CHANNELS['receipt:generate-no'], date),

@@ -358,7 +358,7 @@ export async function sendWhatsAppDocument(opts: {
 
   try {
     const { generatePdf } = await import('./print');
-    const pdf = await generatePdf(opts.html);
+    const pdf = await generatePdf(opts.html, { pageSize: 'A5' });
     writeFileSync(pdfPath, pdf);
 
     const finalMessage = opts.message || buildMessage({

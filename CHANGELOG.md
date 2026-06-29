@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.3.0 (2026-06-29)
+
+### New
+- **A5 Invoice & Receipt printing** — Invoice and receipt templates now print on A5 paper (148×210mm) for compact, receipt-style output. Ledger printing remains on A4 landscape.
+- **Receipt editing** — Edit existing receipts: change amount, payment method, date, notes, and reallocate to different invoices. Ledger entries are automatically reversed and recreated.
+- **All Customers ledger view** — Select "All Customers" (no customer filter) to see a combined ledger with a Customer column. Available for all-FY and specific-FY views.
+- **Legacy payments in Receipts** — Imported Speed Plus payment entries (from `ledger_entries` table) now appear in the Receipts panel with an orange "LEGACY" badge.
+- **Legacy receipt printing** — Legacy imported receipts can be printed using the same A5 template as regular receipts.
+- **FY filter in Receipts** — Filter receipts by financial year using the new dropdown in the Receipts panel header.
+
+### Improvements
+- **Floating-point tolerance** — Receipt modal now uses 0.001 epsilon for payment allocation validation, preventing false "Exceeds payment amount" errors from rounding differences.
+- **Receipt print flexibility** — `print:receipt` IPC handler accepts both numeric IDs and legacy string IDs (e.g., `"LEGACY-123"`).
+
+### Bug Fixes
+- **Receipt modal validation** — Fixed floating-point comparison that sometimes rejected valid allocation amounts due to rounding.
+
 ## v1.2.4 (2026-05-31)
 
 ### New

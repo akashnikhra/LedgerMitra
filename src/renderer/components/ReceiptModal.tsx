@@ -5,14 +5,27 @@ interface Customer { id: number; name: string; }
 interface Invoice { id: number; invoice_no: string; invoice_date: string; total_amount: number; total_remaining: number; }
 interface Allocation { invoice_id: number; allocated_amount: number; }
 
+interface EditReceipt {
+  id: number;
+  customer_id: number;
+  receipt_date: string;
+  amount: number;
+  payment_method: string;
+  reference_no?: string;
+  bank_account?: string;
+  narration?: string;
+  allocations: Allocation[];
+}
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: unknown) => void;
   customers: Customer[];
+  editReceipt?: EditReceipt | null;
 }
 
-export default function ReceiptModal({ isOpen, onClose, onSave, customers }: Props) {
+export default function ReceiptModal({ isOpen, onClose, onSave, customers, editReceipt }: Props) {
   const [customerId, setCustomerId] = useState('');
   const [amount, setAmount] = useState('');
   const [receiptDate, setReceiptDate] = useState(new Date().toISOString().split('T')[0]);
@@ -20,15 +33,33 @@ export default function ReceiptModal({ isOpen, onClose, onSave, customers }: Pro
   const [referenceNo, setReferenceNo] = useState('');
   const [bankAccount, setBankAccount] = useState('');
   const [narration, setNarration] = useState('');
-  const [allocMode, setAllocMode] = useState<'auto' | 'manual'>('auto');
+  const [allocMode, setAllocMode] = useState<'auto' | 'manual'>('manual');
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [allocations, setAllocations] = useState<Allocation[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const isEdit = !!editReceipt;
+
+  useEffect(() => {
+    if (isOpen && editReceipt) {
+      setCustomerId(String(editReceipt.customer_id));
+      setAmount(String(editReceipt.amount));
+      setReceiptDate(editReceipt.receipt_date);
+      setPaymentMethod(editReceipt.payment_method);
+      setReferenceNo(editReceipt.reference_no || '');
+      setBankAccount(editReceipt.bank_account || '');
+      setNarration(editReceipt.narration || '');
+      setAllocations(editReceipt.allocations.map(a => ({ invoice_id: a.invoice_id, allocated_amount: a.allocated_amount })));
+      setAllocMode('manual');
+    } else if (isOpen) {
+      resetForm();
+    }
+  }, [isOpen, editReceipt]);
+
   useEffect(() => {
     if (customerId) loadInvoices(parseInt(customerId));
-    else { setInvoices([]); setAllocations([]); }
+    else { setInvoices([]); if (!isEdit) setAllocations([]); }
   }, [customerId]);
 
   async function loadInvoices(custId: number) {
@@ -67,7 +98,7 @@ export default function ReceiptModal({ isOpen, onClose, onSave, customers }: Pro
       resetForm();
       onClose();
     } catch (e) {
-      setError('Failed to create receipt');
+      setError('Failed to save receipt');
     } finally {
       setLoading(false);
     }
@@ -76,7 +107,7 @@ export default function ReceiptModal({ isOpen, onClose, onSave, customers }: Pro
   function resetForm() {
     setCustomerId(''); setAmount(''); setReceiptDate(new Date().toISOString().split('T')[0]);
     setPaymentMethod('CASH'); setReferenceNo(''); setBankAccount(''); setNarration('');
-    setAllocations([]); setInvoices([]);
+    setAllocations([]); setInvoices([]); setAllocMode('manual');
   }
 
   if (!isOpen) return null;
@@ -87,7 +118,7 @@ export default function ReceiptModal({ isOpen, onClose, onSave, customers }: Pro
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>New Payment Receipt</h3>
+          <h3>{isEdit ? 'Edit Payment Receipt' : 'New Payment Receipt'}</h3>
           <button className="modal-close" onClick={onClose}>&times;</button>
         </div>
         <div className="modal-body">
@@ -167,7 +198,7 @@ export default function ReceiptModal({ isOpen, onClose, onSave, customers }: Pro
               </table>
               <div className="alloc-footer">
                 <span>Total Allocated: ₹{allocatedTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                {allocatedTotal > parseFloat(amount || '0') && <span className="text-error">Exceeds payment amount!</span>}
+                {allocatedTotal > parseFloat(amount || '0') + 0.001 && <span className="text-error">Exceeds payment amount!</span>}
               </div>
             </div>
           )}
@@ -175,7 +206,7 @@ export default function ReceiptModal({ isOpen, onClose, onSave, customers }: Pro
         <div className="modal-footer">
           <button className="btn" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary" onClick={handleSubmit} disabled={loading || !customerId || !amount}>
-            {loading ? 'Saving...' : 'Save Receipt'}
+            {loading ? 'Saving...' : isEdit ? 'Update Receipt' : 'Save Receipt'}
           </button>
         </div>
       </div>

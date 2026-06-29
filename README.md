@@ -39,12 +39,12 @@ All data stays **offline on your machine** — no cloud, no subscriptions, no in
 - **Dashboard** — KPI cards, sales/purchase summaries, outstanding snapshots
 - **Invoicing** — Create and manage sales invoices with line items, GST, and auto-numbering
 - **Purchase Invoices** — Record purchases with stock and ledger integration
-- **Payment Receipts** — Receive payments with auto or manual invoice allocation
-- **Ledger** — Customer-wise, year-wise, and invoice-wise ledger with debit/credit summaries
+- **Payment Receipts** — Receive payments with auto or manual invoice allocation, edit existing receipts with ledger reversal, view legacy imported payments
+- **Ledger** — Customer-wise, year-wise, invoice-wise, and all-customers ledger with debit/credit summaries
 - **Customers & Suppliers** — Party master management with opening balances
 - **Products** — SKU-based product catalog with rates, GST, and stock tracking
 - **Financial Years** — Multi-FY support with balance carry-forward across years
-- **Print & PDF** — Invoice, receipt, and ledger printing with save-to-PDF
+- **Print & PDF** — Invoice and receipt printing on A5 paper, ledger on A4, with save-to-PDF and WhatsApp sharing
 - **WhatsApp Integration** — Send invoices and receipts directly via WhatsApp Web
 - **Backup & Restore** — One-click database export and import
 - **Legacy Import** — Full migration engine from Speed Plus MDB/BMW files

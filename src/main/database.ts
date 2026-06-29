@@ -240,6 +240,153 @@ export async function initializeDatabase(dbPath?: string): Promise<void> {
     ).run(hash);
   }
 
+  // Migration: Add discount_pct and remarks columns to invoice_items
+  try {
+    const iiCols = db.prepare("PRAGMA table_info(invoice_items)").all() as Array<{ name: string }>;
+    const iiColNames = new Set(iiCols.map(c => c.name));
+    if (!iiColNames.has('discount_pct')) {
+      db.exec("ALTER TABLE invoice_items ADD COLUMN discount_pct DECIMAL(5, 2) DEFAULT 0");
+      console.log('[Migration] Added discount_pct to invoice_items');
+    }
+    if (!iiColNames.has('remarks')) {
+      db.exec("ALTER TABLE invoice_items ADD COLUMN remarks TEXT");
+      console.log('[Migration] Added remarks to invoice_items');
+    }
+  } catch (e) {
+    console.error('Migration error:', e);
+  }
+
+  // Migration: Add discount_pct and remarks columns to purchase_invoice_items
+  try {
+    const piiCols = db.prepare("PRAGMA table_info(purchase_invoice_items)").all() as Array<{ name: string }>;
+    const piiColNames = new Set(piiCols.map(c => c.name));
+    if (!piiColNames.has('discount_pct')) {
+      db.exec("ALTER TABLE purchase_invoice_items ADD COLUMN discount_pct DECIMAL(5, 2) DEFAULT 0");
+      console.log('[Migration] Added discount_pct to purchase_invoice_items');
+    }
+    if (!piiColNames.has('remarks')) {
+      db.exec("ALTER TABLE purchase_invoice_items ADD COLUMN remarks TEXT");
+      console.log('[Migration] Added remarks to purchase_invoice_items');
+    }
+  } catch (e) {
+    console.error('Migration error:', e);
+  }
+
+  // Migration: Recalculate invoice amounts to apply discount_pct
+  // Fixes legacy imports where D% was stored but not applied to amounts
+  try {
+    const invoices = db.prepare(`SELECT id FROM invoices WHERE id IN (
+      SELECT DISTINCT invoice_id FROM invoice_items WHERE discount_pct > 0
+    )`).all() as Array<{ id: number }>;
+    for (const inv of invoices) {
+      const items = db.prepare(
+        'SELECT id, qty, rate, gst_rate, discount_pct FROM invoice_items WHERE invoice_id = ?'
+      ).all(inv.id) as Array<{ id: number; qty: number; rate: number; gst_rate: number; discount_pct: number }>;
+      let subtotal = 0;
+      let taxAmount = 0;
+      let totalDiscount = 0;
+      for (const item of items) {
+        const lineAmt = item.qty * item.rate;
+        const discountAmt = item.discount_pct ? (lineAmt * item.discount_pct) / 100 : 0;
+        const amt = lineAmt - discountAmt;
+        subtotal += amt;
+        totalDiscount += discountAmt;
+        const gst = item.gst_rate ? (amt * item.gst_rate) / 100 : 0;
+        taxAmount += gst;
+        db.prepare('UPDATE invoice_items SET amount = ?, gst_amount = ? WHERE id = ?')
+          .run(amt, gst, item.id);
+      }
+      const total = subtotal + taxAmount;
+      const oldInvoice = db.prepare('SELECT total_amount, customer_id FROM invoices WHERE id = ?').get(inv.id) as { total_amount: number; customer_id: number } | undefined;
+      const oldTotal = oldInvoice?.total_amount || total;
+      const totalDiff = total - oldTotal;
+      db.prepare(`UPDATE invoices SET subtotal = ?, discount = ?, tax_amount = ?, total_amount = ?, total_remaining = MAX(0, total_remaining + ?) WHERE id = ?`)
+        .run(subtotal, totalDiscount, taxAmount, total, totalDiff, inv.id);
+      if (totalDiff !== 0 && oldInvoice?.customer_id) {
+        db.prepare(`UPDATE customers SET current_balance = current_balance + ? WHERE id = ?`)
+          .run(totalDiff, oldInvoice.customer_id);
+      }
+    }
+    if (invoices.length > 0) {
+      console.log(`[Migration] Recalculated amounts for ${invoices.length} invoices with D%`);
+    }
+  } catch (e) {
+    console.error('Migration error (recalc invoice amounts):', e);
+  }
+
+  // Migration: Delete empty rows from invoice_items (no product, no amount)
+  try {
+    const deleted = db.prepare(
+      `DELETE FROM invoice_items WHERE product_id IS NULL AND product_name IS NULL AND (rate = 0 OR amount = 0)`
+    ).run();
+    if (deleted.changes > 0) {
+      console.log(`[Migration] Deleted ${deleted.changes} empty invoice_item rows`);
+    }
+  } catch (e) {
+    console.error('Migration error (cleanup empty rows):', e);
+  }
+
+  // Migration: Add discount column to purchase_invoices if missing
+  try {
+    const piCols = db.prepare("PRAGMA table_info(purchase_invoices)").all() as Array<{ name: string }>;
+    const piColNames = new Set(piCols.map(c => c.name));
+    if (!piColNames.has('discount')) {
+      db.exec("ALTER TABLE purchase_invoices ADD COLUMN discount DECIMAL(15, 2) DEFAULT 0");
+      console.log('[Migration] Added discount to purchase_invoices');
+    }
+  } catch (e) {
+    console.error('Migration error:', e);
+  }
+
+  // Migration: Recalculate purchase invoice amounts to apply discount_pct
+  try {
+    const pInvoices = db.prepare(`SELECT id FROM purchase_invoices WHERE id IN (
+      SELECT DISTINCT invoice_id FROM purchase_invoice_items WHERE discount_pct > 0
+    )`).all() as Array<{ id: number }>;
+    for (const inv of pInvoices) {
+      const items = db.prepare(
+        'SELECT id, qty, rate, gst_rate, discount_pct FROM purchase_invoice_items WHERE invoice_id = ?'
+      ).all(inv.id) as Array<{ id: number; qty: number; rate: number; gst_rate: number; discount_pct: number }>;
+      let subtotal = 0;
+      let taxAmount = 0;
+      let totalDiscount = 0;
+      for (const item of items) {
+        const lineAmt = item.qty * item.rate;
+        const discountAmt = item.discount_pct ? (lineAmt * item.discount_pct) / 100 : 0;
+        const amt = lineAmt - discountAmt;
+        subtotal += amt;
+        totalDiscount += discountAmt;
+        const gst = item.gst_rate ? (amt * item.gst_rate) / 100 : 0;
+        taxAmount += gst;
+        db.prepare('UPDATE purchase_invoice_items SET amount = ?, gst_amount = ? WHERE id = ?')
+          .run(amt, gst, item.id);
+      }
+      const total = subtotal + taxAmount;
+      const oldInv = db.prepare('SELECT total_amount, supplier_id FROM purchase_invoices WHERE id = ?').get(inv.id) as { total_amount: number; supplier_id: number } | undefined;
+      const oldTotal = oldInv?.total_amount || total;
+      const totalDiff = total - oldTotal;
+      db.prepare(`UPDATE purchase_invoices SET subtotal = ?, discount = ?, tax_amount = ?, total_amount = ?, total_remaining = MAX(0, total_remaining + ?) WHERE id = ?`)
+        .run(subtotal, totalDiscount, taxAmount, total, totalDiff, inv.id);
+    }
+    if (pInvoices.length > 0) {
+      console.log(`[Migration] Recalculated amounts for ${pInvoices.length} purchase invoices with D%`);
+    }
+  } catch (e) {
+    console.error('Migration error (recalc purchase invoice amounts):', e);
+  }
+
+  // Migration: Delete empty rows from purchase_invoice_items (no product, no amount)
+  try {
+    const deleted = db.prepare(
+      `DELETE FROM purchase_invoice_items WHERE product_id IS NULL AND product_name IS NULL AND (rate = 0 OR amount = 0)`
+    ).run();
+    if (deleted.changes > 0) {
+      console.log(`[Migration] Deleted ${deleted.changes} empty purchase_invoice_item rows`);
+    }
+  } catch (e) {
+    console.error('Migration error (cleanup empty purchase rows):', e);
+  }
+
   // Migration: Create licenses table
   try {
     db.exec(`
