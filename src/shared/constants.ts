@@ -24,6 +24,7 @@ export const IPC_CHANNELS = {
   'supplier:update': 'supplier:update',
   'supplier:delete': 'supplier:delete',
   'product:list': 'product:list',
+  'product:next-sku': 'product:next-sku',
   'product:create': 'product:create',
   'product:get': 'product:get',
   'product:update': 'product:update',

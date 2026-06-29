@@ -2,6 +2,19 @@ import { queryAll, queryOne, executeWrite } from './database';
 import { getActiveCompanyId } from './session';
 import type { Product } from '@shared/types';
 
+export function getNextSku(companyIdOverride?: number): string {
+  const companyId = companyIdOverride ?? getActiveCompanyId();
+  if (!companyId) return '1';
+
+  const row = queryOne<{ max_sku: string | null }>(
+    `SELECT MAX(CAST(sku AS INTEGER)) as max_sku FROM products WHERE company_id = ? AND sku GLOB '[0-9]*'`,
+    [companyId]
+  );
+
+  const maxNum = row?.max_sku ? parseInt(row.max_sku, 10) : 0;
+  return String(maxNum + 1);
+}
+
 export function getAllProducts(companyId?: number): Product[] {
   const cid = companyId ?? getActiveCompanyId();
   if (!cid) return [];

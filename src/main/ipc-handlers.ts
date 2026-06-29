@@ -14,7 +14,7 @@ import {
 } from './financial-year';
 import { getAllCustomers, getCustomerById, createCustomer, updateCustomer, deleteCustomer } from './customer';
 import { getAllSuppliers, getSupplierById, createSupplier, updateSupplier, deleteSupplier } from './supplier';
-import { getAllProducts, getProductById, createProduct, updateProduct, deleteProduct } from './product';
+import { getAllProducts, getProductById, createProduct, updateProduct, deleteProduct, getNextSku } from './product';
 import { getAllInvoices, getInvoiceById, getInvoiceWithItems, getInvoiceItems, createInvoice, updateInvoice, deleteInvoice } from './invoice';
 import { getAllPurchaseInvoices, getPurchaseInvoiceById, getPurchaseInvoiceItems, createPurchaseInvoice, deletePurchaseInvoice } from './purchase-invoice';
 import { getLedgerEntries, addPaymentEntry, addPurchasePaymentEntry, getCustomerLedger, getYearLedger, getInvoiceLedger, getLedgerSummary } from './ledger';
@@ -109,6 +109,7 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
   ipcMain.handle(IPC_CHANNELS['supplier:delete'], (_, id: number) => deleteSupplier(id));
 
   ipcMain.handle(IPC_CHANNELS['product:list'], () => getAllProducts());
+  ipcMain.handle(IPC_CHANNELS['product:next-sku'], () => getNextSku());
   ipcMain.handle(IPC_CHANNELS['product:create'], (_, data) => createProduct(data));
   ipcMain.handle(IPC_CHANNELS['product:get'], (_, id: number) => getProductById(id));
   ipcMain.handle(IPC_CHANNELS['product:update'], (_, { id, data }) => updateProduct(id, data));

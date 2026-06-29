@@ -39,6 +39,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   deleteSupplier: (id: number) => ipcRenderer.invoke(IPC_CHANNELS['supplier:delete'], id),
 
   getProducts: () => ipcRenderer.invoke(IPC_CHANNELS['product:list']),
+  getNextSku: () => ipcRenderer.invoke(IPC_CHANNELS['product:next-sku']),
   createProduct: (data: unknown) => ipcRenderer.invoke(IPC_CHANNELS['product:create'], data),
   getProduct: (id: number) => ipcRenderer.invoke(IPC_CHANNELS['product:get'], id),
   updateProduct: (id: number, data: unknown) =>

@@ -52,7 +52,9 @@ export default function ProductModal({
 
   useEffect(() => {
     if (mode === 'create') {
-      setForm(emptyForm);
+      window.electron.getNextSku().then((sku: string) => {
+        setForm({ ...emptyForm, sku });
+      });
     } else if (product) {
       setForm({
         sku: product.sku,
@@ -141,12 +143,13 @@ export default function ProductModal({
           <form onSubmit={handleSubmit}>
             <div className="modal-form-row">
               <div className="form-group">
-                <label>SKU *</label>
+                <label>SKU * <span style={{fontSize:'12px',color:'var(--muted)'}}>(auto-generated)</span></label>
                 <input
                   value={form.sku}
                   onChange={(e) => setForm({ ...form, sku: e.target.value })}
                   required
                   disabled={mode === 'view'}
+                  placeholder="Auto-generated"
                 />
               </div>
               <div className="form-group">
