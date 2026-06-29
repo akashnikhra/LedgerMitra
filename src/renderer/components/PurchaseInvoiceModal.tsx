@@ -53,6 +53,8 @@ export default function PurchaseInvoiceModal({
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const qtyRefs = useRef<Map<number, HTMLInputElement | null>>(new Map());
+  const modalRef = useRef<HTMLDivElement>(null);
+  const supplierRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (mode === 'create') {
@@ -85,6 +87,51 @@ export default function PurchaseInvoiceModal({
       });
     }
   }, [mode, invoice, suppliers]);
+
+  // Auto-focus first field on mount
+  useEffect(() => {
+    if (mode === 'create') {
+      setTimeout(() => supplierRef.current?.focus(), 0);
+    } else if (mode === 'view') {
+      setTimeout(() => {
+        modalRef.current?.querySelector<HTMLButtonElement>('.btn')?.focus();
+      }, 0);
+    }
+  }, [mode]);
+
+  // Global keyboard: Escape to close, Ctrl+S to save, focus trap
+  useEffect(() => {
+    function handleGlobalKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        document.getElementById('purchase-invoice-form')?.requestSubmit();
+        return;
+      }
+      // Focus trap
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+          'input:not([disabled]), select:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+    document.addEventListener('keydown', handleGlobalKey);
+    return () => document.removeEventListener('keydown', handleGlobalKey);
+  }, [onClose]);
 
   function addItem() {
     setItems([...items, { ...emptyItem }]);
@@ -252,7 +299,7 @@ export default function PurchaseInvoiceModal({
 
   return (
       <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content modal-wide" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-content modal-wide" ref={modalRef} onClick={(e) => e.stopPropagation()} tabIndex={-1}>
         <div className="modal-header">
           <h2>
             {mode === 'create' ? 'New Purchase Invoice' : 'View Purchase Invoice'}
@@ -268,7 +315,7 @@ export default function PurchaseInvoiceModal({
         <div className="modal-body">
           {error && <div className="alert alert-error">{error}</div>}
 
-          <form onSubmit={handleSubmit}>
+          <form id="purchase-invoice-form" onSubmit={handleSubmit}>
             <div className="modal-form-row">
               <div className="form-group">
                 <label>Invoice no.</label>
@@ -291,7 +338,7 @@ export default function PurchaseInvoiceModal({
               </div>
             </div>
 
-            <div className="form-group">
+            <div className="form-group" ref={supplierRef} tabIndex={-1}>
               <label>Supplier *</label>
               {mode === 'view' ? (
                 <input value={selectedSupplier?.name || ''} readOnly disabled />
@@ -428,6 +475,23 @@ export default function PurchaseInvoiceModal({
                                   value={item.remarks || ''}
                                   placeholder="—"
                                   onChange={(e) => updateItem(idx, 'remarks', e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      if (idx === items.length - 1) {
+                                        setItems(prev => [...prev, { ...emptyItem }]);
+                                        setTimeout(() => {
+                                          const nextQty = qtyRefs.current.get(idx + 1);
+                                          nextQty?.focus();
+                                          nextQty?.select();
+                                        }, 0);
+                                      } else {
+                                        const nextQty = qtyRefs.current.get(idx + 1);
+                                        nextQty?.focus();
+                                        nextQty?.select();
+                                      }
+                                    }
+                                  }}
                                 />
                               </td>
                             )}
@@ -518,7 +582,7 @@ export default function PurchaseInvoiceModal({
               <button type="button" className="btn btn-secondary" onClick={onClose}>
                 Cancel
               </button>
-              <button type="submit" className="btn" disabled={saving} onClick={(e) => handleSubmit(e as any)}>
+              <button type="submit" form="purchase-invoice-form" className="btn" disabled={saving}>
                 {saving ? 'Saving…' : 'Create Purchase Invoice'}
               </button>
             </>

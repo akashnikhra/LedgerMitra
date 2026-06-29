@@ -57,8 +57,7 @@
     ],
     "win": {
       "target": "nsis",
-      "forceCodeSigning": false,
-      "sign": false
+      "forceCodeSigning": false
     }
   }
 }
