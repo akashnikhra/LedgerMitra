@@ -978,14 +978,40 @@ async function importProducts(reader: any, companyId: number): Promise<{ importe
     // Map common column names
     const nameCol = columns.find(c => c.toLowerCase().includes('name') && !c.toLowerCase().includes('group'));
     const skuCol = columns.find(c => c.toLowerCase().includes('code') || c.toLowerCase().includes('sku') || c.toLowerCase().includes('barcode'));
-    const saleCol = columns.find(c => c.toLowerCase().includes('sale') || c.toLowerCase().includes('mrp'));
-    const purchaseCol = columns.find(c => c.toLowerCase().includes('purchase') || c.toLowerCase().includes('cost'));
+    const saleCol = columns.find(c => c === 'SalePrice' || c === 'SelectedPrice' || c === 'MRP' || c === 'Rate' || c === 'Price' || c.toLowerCase().includes('sale') || c.toLowerCase().includes('mrp') || c.toLowerCase().includes('rate'));
+    const purchaseCol = columns.find(c => c === 'PurchasePrice' || c === 'CostPrice' || c === 'Cost' || c.toLowerCase().includes('purchase') || c.toLowerCase().includes('cost'));
     const gstCol = columns.find(c => c.toLowerCase().includes('gst') || c.toLowerCase().includes('tax'));
     const hsnCol = columns.find(c => c.toLowerCase().includes('hsn') || c.toLowerCase().includes('sac'));
     const unitCol = columns.find(c => c.toLowerCase().includes('unit'));
-    const stockCol = columns.find(c => c.toLowerCase().includes('stock') || c.toLowerCase().includes('qty') || c.toLowerCase().includes('opstock'));
+    const stockCol = columns.find(c => c === 'OPStock' || c === 'StockQty' || c.toLowerCase().includes('stock') || c.toLowerCase().includes('qty') || c.toLowerCase().includes('opstock'));
     const reorderCol = columns.find(c => c.toLowerCase().includes('reorder') || c.toLowerCase().includes('minimum'));
-    const groupCol = columns.find(c => c.toLowerCase().includes('group') || c.toLowerCase().includes('category'));
+    const groupCol = columns.find(c => c === 'ItemGroupName' || c.toLowerCase().includes('group') || c.toLowerCase().includes('category'));
+
+    // Find ALL price-related columns for fallback
+    const allPriceCols = columns.filter(c =>
+      /price|rate|mrp|sale|cost|amount/i.test(c)
+    );
+
+    console.log(`[MDB] Items table "${itemsTableName}" columns:`, columns);
+    console.log(`[MDB] Mapped columns - name: ${nameCol}, sku: ${skuCol}, sale: ${saleCol}, purchase: ${purchaseCol}, gst: ${gstCol}, stock: ${stockCol}`);
+    console.log(`[MDB] All price-related columns:`, allPriceCols);
+
+    // Helper: pick best rate from multiple columns (first non-zero wins)
+    function pickBestRate(row: any, preferredCols: (string | undefined)[], fallbackCols: string[]): number {
+      for (const col of preferredCols) {
+        if (col && row[col] !== undefined && row[col] !== null && row[col] !== '') {
+          const val = parseFloat(row[col]);
+          if (!isNaN(val) && val > 0) return val;
+        }
+      }
+      for (const col of fallbackCols) {
+        if (row[col] !== undefined && row[col] !== null && row[col] !== '') {
+          const val = parseFloat(row[col]);
+          if (!isNaN(val) && val > 0) return val;
+        }
+      }
+      return 0;
+    }
 
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
@@ -1002,11 +1028,14 @@ async function importProducts(reader: any, companyId: number): Promise<{ importe
           continue;
         }
 
+        const sellingRate = pickBestRate(row, [saleCol, 'SalePrice', 'SelectedPrice', 'MRP', 'Rate', 'Price', 'Sp1', 'Sp2', 'Sp3'], allPriceCols);
+        const purchaseRate = pickBestRate(row, [purchaseCol, 'PurchasePrice', 'CostPrice', 'Cost', 'Rate', 'Price', 'Pp1'], allPriceCols);
+
         const productData: any = {
           sku: String(sku),
           name: String(itemName),
-          selling_rate: parseFloat(row[saleCol]) || 0,
-          purchase_rate: row[purchaseCol] ? parseFloat(row[purchaseCol]) : undefined,
+          selling_rate: sellingRate,
+          purchase_rate: purchaseRate || undefined,
           gst_rate: row[gstCol] ? parseFloat(row[gstCol]) : undefined,
           hsn_code: row[hsnCol] ? String(row[hsnCol]) : undefined,
           unit: row[unitCol] ? String(row[unitCol]) : 'Nos',
@@ -1014,6 +1043,10 @@ async function importProducts(reader: any, companyId: number): Promise<{ importe
           opening_stock: row[stockCol] ? parseInt(row[stockCol]) : 0,
           category: row[groupCol] ? String(row[groupCol]) : undefined
         };
+
+        if (i < 5) {
+          console.log(`[MDB] Row ${i + 1}: "${itemName}" → selling_rate: ${sellingRate}, purchase_rate: ${purchaseRate}`);
+        }
 
         await createProduct(productData, companyId);
         result.imported++;
@@ -1210,7 +1243,7 @@ async function importInvoices(
     const seenVouchers = new Set<string>();
 
     const billMasterTableName = reader.getTableNames().find((t: string) => t.toLowerCase() === 'billmaster');
-    let billMasterItems: Map<string, Array<{ itemName?: string; qty?: number; rate?: number; amount?: number; gstRate?: number }>> = new Map();
+    let billMasterItems: Map<string, Array<{ itemName?: string; qty?: number; rate?: number; amount?: number; gstRate?: number; discountPct?: number; remarks?: string }>> = new Map();
 
     if (billMasterTableName) {
       billMasterItems = parseBillMasterItems(reader, billMasterTableName);
@@ -1218,7 +1251,7 @@ async function importInvoices(
 
     // Speed Plus stores line items in the Inventory table, not BillMaster
     const inventoryTableName = reader.getTableNames().find((t: string) => t.toLowerCase() === 'inventory');
-    let inventoryItems: Map<string, Array<{ itemName?: string; qty?: number; rate?: number; amount?: number; gstRate?: number }>> = new Map();
+    let inventoryItems: Map<string, Array<{ itemName?: string; qty?: number; rate?: number; amount?: number; gstRate?: number; discountPct?: number; remarks?: string }>> = new Map();
 
     if (inventoryTableName && billMasterItems.size === 0) {
       inventoryItems = parseInventoryItems(reader, inventoryTableName);
@@ -1226,6 +1259,16 @@ async function importInvoices(
 
     // Merge: Inventory items take precedence when BillMaster has no line items
     const allLineItems = inventoryItems.size > 0 ? inventoryItems : billMasterItems;
+
+    let discountCount = 0;
+    let remarksCount = 0;
+    for (const items of allLineItems.values()) {
+      for (const it of items) {
+        if (it.discountPct && it.discountPct !== 0) discountCount++;
+        if (it.remarks && it.remarks !== '') remarksCount++;
+      }
+    }
+    console.log(`[MDB] All line items: ${allLineItems.size} vouchers, ${discountCount} items with discount, ${remarksCount} items with remarks`);
 
     // Invoice import from Ledger
     // Columns: dateCol=${dateCol}, dcCol=${dcCol}, tranCol=${tranCol}, vchCol=${vchCol}, amountCol=${amountCol}
@@ -1298,7 +1341,7 @@ async function importInvoices(
         const billKey = `${voucherId}`;
         const legacyItems = allLineItems.get(billKey) || [];
 
-        const mappedItems: Array<{ product_id?: number; product_name?: string; qty: number; rate: number; gst_rate?: number }> = [];
+        const mappedItems: Array<{ product_id?: number; product_name?: string; qty: number; rate: number; gst_rate?: number; discount_pct?: number; remarks?: string }> = [];
         const productByName = new Map<string, number>();
         const existingProducts = getAllProducts(companyId);
         for (const p of existingProducts) {
@@ -1329,7 +1372,9 @@ async function importInvoices(
             product_name: li.itemName || undefined,
             qty,
             rate,
-            gst_rate: gstRate
+            gst_rate: gstRate,
+            discount_pct: li.discountPct,
+            remarks: li.remarks
           });
         }
 
@@ -1371,13 +1416,23 @@ async function importInvoices(
 function parseBillMasterItems(
   reader: any,
   tableName: string
-): Map<string, Array<{ itemName?: string; qty?: number; rate?: number; amount?: number; gstRate?: number }>> {
-  const itemsMap = new Map<string, Array<{ itemName?: string; qty?: number; rate?: number; amount?: number; gstRate?: number }>>();
+): Map<string, Array<{ itemName?: string; qty?: number; rate?: number; amount?: number; gstRate?: number; discountPct?: number; remarks?: string }>> {
+  const itemsMap = new Map<string, Array<{ itemName?: string; qty?: number; rate?: number; amount?: number; gstRate?: number; discountPct?: number; remarks?: string }>>();
 
   try {
     const table = reader.getTable(tableName);
     const columns = table.getColumnNames();
     const { rows: data } = readTableDataSafe(table);
+
+    console.log(`[MDB] BillMaster columns: ${columns.join(', ')}`);
+
+    // Dump first 2 rows to see actual column values
+    if (data.length > 0) {
+      console.log(`[MDB] BillMaster first row: ${JSON.stringify(data[0])}`);
+    }
+    if (data.length > 1) {
+      console.log(`[MDB] BillMaster second row: ${JSON.stringify(data[1])}`);
+    }
 
     const vchCol = pickColumn(columns, (c) => c === 'VoucherID', (c) => c === 'VchNo', (c) => /voucher/i.test(c));
     const itemCol = pickColumn(columns, (c) => c === 'ItemName', (c) => c === 'Item', (c) => /item.*name/i.test(c), (c) => /product/i.test(c));
@@ -1385,6 +1440,35 @@ function parseBillMasterItems(
     const rateCol = pickColumn(columns, (c) => c === 'Rate', (c) => c === 'UnitPrice', (c) => c === 'Price', (c) => /rate/i.test(c));
     const amountCol = pickColumn(columns, (c) => c === 'Amount', (c) => c === 'Total', (c) => c === 'LineTotal', (c) => /amount/i.test(c));
     const gstCol = pickColumn(columns, (c) => c === 'GSTRate', (c) => c === 'TaxRate', (c) => c === 'GST', (c) => /gst.*rate/i.test(c), (c) => /tax.*rate/i.test(c));
+    // Discount percentage column (D% in Speed Plus)
+    // Speed Plus uses DiscountRate for the actual item-level discount %.
+    const discountCol = pickColumn(columns,
+      (c) => c === 'DiscountRate',
+      (c) => c === 'D%',
+      (c) => c === 'D %',
+      (c) => c === 'Disc%',
+      (c) => c === 'DiscountPercentage',
+      (c) => c === 'Discount',
+      (c) => /^d\s*%$/i.test(c),
+      (c) => /^discount.*rate$/i.test(c)
+    );
+    // Remarks column
+    // Speed Plus may use: Remarks, Remark, Narration, ShortNarration, Note, etc.
+    const remarksCol = pickColumn(columns,
+      (c) => c === 'Remarks',
+      (c) => c === 'Remark',
+      (c) => c === 'Narration',
+      (c) => c === 'ShortNarration',
+      (c) => c === 'Note',
+      (c) => /remark|narration|note/i.test(c)
+    );
+
+    if (discountCol) {
+      console.log(`[MDB] BillMaster: discount column found = "${discountCol}"`);
+    }
+    if (remarksCol) {
+      console.log(`[MDB] BillMaster: remarks column found = "${remarksCol}"`);
+    }
 
     if (!vchCol) {
       console.log(`[MDB] BillMaster: no voucher column found`);
@@ -1402,13 +1486,15 @@ function parseBillMasterItems(
       if (vchId == null || vchId === '') continue;
       const key = String(vchId);
 
-      const item: { itemName?: string; qty?: number; rate?: number; amount?: number; gstRate?: number } = {};
+      const item: { itemName?: string; qty?: number; rate?: number; amount?: number; gstRate?: number; discountPct?: number; remarks?: string } = {};
 
       if (itemCol) item.itemName = String(row[itemCol] || '');
       if (qtyCol) item.qty = parseFloat(row[qtyCol]) || undefined;
       if (rateCol) item.rate = parseFloat(row[rateCol]) || undefined;
       if (amountCol) item.amount = parseFloat(row[amountCol]) || undefined;
       if (gstCol) item.gstRate = parseFloat(row[gstCol]) || undefined;
+      if (discountCol) item.discountPct = parseFloat(row[discountCol]) || undefined;
+      if (remarksCol) item.remarks = String(row[remarksCol] || '') || undefined;
 
       // Skip rows with no meaningful item data
       if (!item.itemName && item.qty === undefined && item.rate === undefined && item.amount === undefined) continue;
@@ -1418,6 +1504,16 @@ function parseBillMasterItems(
       }
       itemsMap.get(key)!.push(item);
     }
+
+    let withDiscount = 0;
+    let withRemarks = 0;
+    for (const items of itemsMap.values()) {
+      for (const it of items) {
+        if (it.discountPct && it.discountPct !== 0) withDiscount++;
+        if (it.remarks && it.remarks !== '') withRemarks++;
+      }
+    }
+    console.log(`[MDB] BillMaster parsed: ${itemsMap.size} vouchers, ${withDiscount} items with discount, ${withRemarks} items with remarks`);
   } catch (err) {
     console.log(`[MDB] BillMaster parsing error:`, err);
   }
@@ -1432,13 +1528,23 @@ function parseBillMasterItems(
 function parseInventoryItems(
   reader: any,
   tableName: string
-): Map<string, Array<{ itemName?: string; qty?: number; rate?: number; amount?: number; gstRate?: number }>> {
-  const itemsMap = new Map<string, Array<{ itemName?: string; qty?: number; rate?: number; amount?: number; gstRate?: number }>>();
+): Map<string, Array<{ itemName?: string; qty?: number; rate?: number; amount?: number; gstRate?: number; discountPct?: number; remarks?: string }>> {
+  const itemsMap = new Map<string, Array<{ itemName?: string; qty?: number; rate?: number; amount?: number; gstRate?: number; discountPct?: number; remarks?: string }>>();
 
   try {
     const table = reader.getTable(tableName);
     const columns = table.getColumnNames();
     const { rows: data } = readTableDataSafe(table);
+
+    console.log(`[MDB] Inventory columns: ${columns.join(', ')}`);
+
+    // Dump first 2 rows to see actual column values
+    if (data.length > 0) {
+      console.log(`[MDB] Inventory first row: ${JSON.stringify(data[0])}`);
+    }
+    if (data.length > 1) {
+      console.log(`[MDB] Inventory second row: ${JSON.stringify(data[1])}`);
+    }
 
     const vchCol = pickColumn(columns, (c) => c === 'VoucherID', (c) => c === 'VchNo', (c) => /voucher/i.test(c));
     const tranCol = pickColumn(columns, (c) => c === 'TransactionType', (c) => c === 'TranType', (c) => /transaction.*type|trantype/i.test(c));
@@ -1473,18 +1579,59 @@ function parseInventoryItems(
       (c) => /tax.*rate/i.test(c),
       (c) => /vat.*percentage/i.test(c)
     );
+    // Discount percentage column (D% in Speed Plus)
+    // Speed Plus uses DiscountRate for the actual item-level discount %.
+    // MarginDiscountPercentage is a different concept (margin/scheme), always 0 for regular discounts.
+    const discountCol = pickColumn(columns,
+      (c) => c === 'DiscountRate',
+      (c) => c === 'D%',
+      (c) => c === 'D %',
+      (c) => c === 'Disc%',
+      (c) => c === 'DiscountPercentage',
+      (c) => c === 'Discount',
+      (c) => /^d\s*%$/i.test(c),
+      (c) => /^discount.*rate$/i.test(c)
+    );
+    // Remarks column
+    // Speed Plus may use: Remarks, Remark, Narration, ShortNarration, Note, etc.
+    const remarksCol = pickColumn(columns,
+      (c) => c === 'Remarks',
+      (c) => c === 'Remark',
+      (c) => c === 'Narration',
+      (c) => c === 'ShortNarration',
+      (c) => c === 'Note',
+      (c) => /remark|narration|note/i.test(c)
+    );
+
+    if (discountCol) {
+      console.log(`[MDB] Inventory: discount column found = "${discountCol}"`);
+    }
+    if (remarksCol) {
+      console.log(`[MDB] Inventory: remarks column found = "${remarksCol}"`);
+    }
 
     if (!vchCol || !itemCol) {
       console.log(`[MDB] Inventory: missing voucher or item column, skipping`);
       return itemsMap;
     }
 
+    // Count total vs sale rows
+    let totalRows = 0;
+    let saleRows = 0;
+    let filteredRows = 0;
+
+    let sampleLogged = 0;
     for (const row of data) {
+      totalRows++;
       // Only include sale transactions
       if (tranCol) {
         const tranType = String(row[tranCol] || '').toLowerCase();
-        if (!tranType.includes('sale') || tranType.includes('return') || tranType.includes('purchase')) continue;
+        if (!tranType.includes('sale') || tranType.includes('return') || tranType.includes('purchase')) {
+          filteredRows++;
+          continue;
+        }
       }
+      saleRows++;
 
       const vchId = row[vchCol];
       if (vchId == null || vchId === '') continue;
@@ -1493,17 +1640,27 @@ function parseInventoryItems(
       const itemName = itemCol ? String(row[itemCol] || '') : '';
       if (!itemName) continue;
 
+      // Log first 3 sale rows to see actual column values
+      if (sampleLogged < 3 && discountCol) {
+        console.log(`[MDB] Inventory sample: vch=${key}, item=${itemName}, discountCol="${discountCol}", rawValue=${JSON.stringify(row[discountCol])}, parsed=${parseFloat(row[discountCol])}`);
+        sampleLogged++;
+      }
+
       const qty = qtyCol ? (parseFloat(row[qtyCol]) || undefined) : undefined;
       const rate = rateCol ? (parseFloat(row[rateCol]) || undefined) : undefined;
       const amount = amountCol ? (parseFloat(row[amountCol]) || undefined) : undefined;
       const gstRate = gstCol ? (parseFloat(row[gstCol]) || undefined) : undefined;
+      const discountPct = discountCol ? (parseFloat(row[discountCol]) || undefined) : undefined;
+      const remarks = remarksCol ? (String(row[remarksCol] || '') || undefined) : undefined;
 
-      const item: { itemName?: string; qty?: number; rate?: number; amount?: number; gstRate?: number } = {
+      const item: { itemName?: string; qty?: number; rate?: number; amount?: number; gstRate?: number; discountPct?: number; remarks?: string } = {
         itemName,
         qty,
         rate,
         amount,
-        gstRate
+        gstRate,
+        discountPct,
+        remarks
       };
 
       if (!itemsMap.has(key)) {
@@ -1511,6 +1668,16 @@ function parseInventoryItems(
       }
       itemsMap.get(key)!.push(item);
     }
+
+    let withDiscount = 0;
+    let withRemarks = 0;
+    for (const items of itemsMap.values()) {
+      for (const it of items) {
+        if (it.discountPct && it.discountPct !== 0) withDiscount++;
+        if (it.remarks && it.remarks !== '') withRemarks++;
+      }
+    }
+    console.log(`[MDB] Inventory parsed: ${itemsMap.size} vouchers, ${withDiscount} items with discount, ${withRemarks} items with remarks (total=${totalRows}, sale=${saleRows}, filtered=${filteredRows})`);
 
     console.log(`[MDB] Inventory: found line items for ${itemsMap.size} vouchers`);
   } catch (err) {
@@ -1747,7 +1914,7 @@ async function importInvoicesForFy(
       const billKey = `${voucherId}`;
       const legacyItems = allLineItems.get(billKey) || [];
 
-      const mappedItems: Array<{ product_id?: number; product_name?: string; qty: number; rate: number; gst_rate?: number }> = [];
+      const mappedItems: Array<{ product_id?: number; product_name?: string; qty: number; rate: number; gst_rate?: number; discount_pct?: number; remarks?: string }> = [];
       for (const li of legacyItems) {
         let productId: number | undefined;
         if (li.itemName) {
@@ -1761,7 +1928,7 @@ async function importInvoicesForFy(
         }
         const qty = li.qty ?? 1;
         const rate = li.rate ?? (li.amount ? li.amount / qty : 0);
-        mappedItems.push({ product_id: productId, product_name: li.itemName || undefined, qty, rate, gst_rate: li.gstRate });
+        mappedItems.push({ product_id: productId, product_name: li.itemName || undefined, qty, rate, gst_rate: li.gstRate, discount_pct: li.discountPct, remarks: li.remarks });
       }
 
       const created = await createInvoice({

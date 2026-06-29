@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import type { Supplier, PurchaseInvoice, Product } from '@shared/types';
+import SearchableSelect from './SearchableSelect';
 
 type FormMode = 'create' | 'view';
 
@@ -9,6 +10,8 @@ interface ItemRow {
   qty: number;
   rate: number;
   gst_rate: number;
+  discount_pct: number;
+  remarks: string;
 }
 
 interface PurchaseInvoiceModalProps {
@@ -22,10 +25,12 @@ interface PurchaseInvoiceModalProps {
     invoice_date: string;
     supplier_id: number;
     notes?: string;
-    items: Array<{ product_id?: number; product_name?: string; qty: number; rate: number; gst_rate: number }>;
+    items: Array<{ product_id?: number; product_name?: string; qty: number; rate: number; gst_rate: number; discount_pct?: number; remarks?: string }>;
   }) => Promise<{ success: boolean; error?: string }>;
   onDelete: (id: number) => Promise<{ success: boolean; error?: string }>;
 }
+
+const emptyItem = { product_id: undefined, product_name: '', qty: 1, rate: 0, gst_rate: 0, discount_pct: 0, remarks: '' };
 
 const emptyForm = {
   invoice_no: '',
@@ -47,6 +52,7 @@ export default function PurchaseInvoiceModal({
   const [items, setItems] = useState<ItemRow[]>([]);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const qtyRefs = useRef<Map<number, HTMLInputElement | null>>(new Map());
 
   useEffect(() => {
     if (mode === 'create') {
@@ -55,7 +61,7 @@ export default function PurchaseInvoiceModal({
         invoice_date: new Date().toISOString().slice(0, 10),
         supplier_id: suppliers.length > 0 ? String(suppliers[0].id) : ''
       });
-      setItems([]);
+      setItems([{ ...emptyItem }]);
     } else if (invoice) {
       setForm({
         invoice_no: invoice.invoice_no,
@@ -71,7 +77,9 @@ export default function PurchaseInvoiceModal({
             product_name: item.product_name || '',
             qty: item.qty,
             rate: item.rate,
-            gst_rate: item.gst_rate || 0
+            gst_rate: item.gst_rate || 0,
+            discount_pct: item.discount_pct || 0,
+            remarks: item.remarks || ''
           }))
         );
       });
@@ -79,35 +87,82 @@ export default function PurchaseInvoiceModal({
   }, [mode, invoice, suppliers]);
 
   function addItem() {
-    setItems([...items, { product_id: undefined, product_name: '', qty: 1, rate: 0, gst_rate: 0 }]);
+    setItems([...items, { ...emptyItem }]);
   }
 
   function removeItem(index: number) {
-    setItems(items.filter((_, i) => i !== index));
+    const updated = items.filter((_, i) => i !== index);
+    if (mode !== 'view' && updated.length === 0) {
+      updated.push({ ...emptyItem });
+    }
+    setItems(updated);
   }
 
-  function updateItem(index: number, field: keyof ItemRow, value: number | undefined | string) {
-    const updated = [...items];
-    updated[index] = { ...updated[index], [field]: value };
+  const updateItem = useCallback((index: number, field: keyof ItemRow, value: number | undefined | string) => {
+    setItems(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
 
-    if (field === 'product_id' && typeof value === 'number') {
-      const product = products.find((p) => p.id === value);
-      if (product) {
-        updated[index].product_name = product.name;
-        updated[index].rate = product.purchase_rate || 0;
-        updated[index].gst_rate = product.gst_rate || 0;
+      if (field === 'product_id' && typeof value === 'number') {
+        const product = products.find((p) => p.id === value);
+        if (product) {
+          updated[index].product_name = product.name;
+          updated[index].rate = product.purchase_rate || 0;
+          updated[index].gst_rate = product.gst_rate || 0;
+        }
+        // Auto-add empty row if product selected in last row
+        if (index === updated.length - 1) {
+          updated.push({ ...emptyItem });
+        }
+      }
+
+      return updated;
+    });
+  }, [products]);
+
+  function handleItemKeyDown(e: React.KeyboardEvent, rowIdx: number, field: 'qty' | 'rate' | 'gst' | 'discount') {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (field === 'qty') {
+        const rateInput = (e.target as HTMLElement).closest('tr')?.querySelector('.col-rate input') as HTMLInputElement;
+        rateInput?.focus();
+        rateInput?.select();
+      } else if (field === 'rate') {
+        const gstInput = (e.target as HTMLElement).closest('tr')?.querySelector('.col-gst input') as HTMLInputElement;
+        gstInput?.focus();
+        gstInput?.select();
+      } else if (field === 'gst') {
+        const discountInput = (e.target as HTMLElement).closest('tr')?.querySelector('.col-discount input') as HTMLInputElement;
+        discountInput?.focus();
+        discountInput?.select();
+      } else if (field === 'discount') {
+        if (rowIdx === items.length - 1) {
+          setItems(prev => [...prev, { ...emptyItem }]);
+          setTimeout(() => {
+            const nextQty = qtyRefs.current.get(rowIdx + 1);
+            nextQty?.focus();
+            nextQty?.select();
+          }, 0);
+        } else {
+          const nextQty = qtyRefs.current.get(rowIdx + 1);
+          nextQty?.focus();
+          nextQty?.select();
+        }
       }
     }
-
-    setItems(updated);
   }
 
   function calcTotals() {
     let subtotal = 0;
     let taxAmount = 0;
+    let totalDiscount = 0;
     for (const item of items) {
-      const amt = item.qty * item.rate;
+      if (!item.product_id && item.qty <= 0 && item.rate <= 0) continue;
+      const lineAmt = item.qty * item.rate;
+      const discountAmt = item.discount_pct ? (lineAmt * item.discount_pct) / 100 : 0;
+      const amt = lineAmt - discountAmt;
       subtotal += amt;
+      totalDiscount += discountAmt;
       taxAmount += item.gst_rate ? (amt * item.gst_rate) / 100 : 0;
     }
     const selectedSupplier = suppliers.find((s) => s.id === parseInt(form.supplier_id, 10));
@@ -123,7 +178,7 @@ export default function PurchaseInvoiceModal({
         igst = taxAmount;
       }
     }
-    return { subtotal, taxAmount, cgst, sgst, igst, total: subtotal + taxAmount };
+    return { subtotal, taxAmount, cgst, sgst, igst, total: subtotal + taxAmount, totalDiscount };
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -141,10 +196,16 @@ export default function PurchaseInvoiceModal({
       return;
     }
 
-    const { total } = calcTotals();
+    const filledItems = items.filter(item => item.product_id || item.qty > 0 || item.rate > 0);
 
-    if (items.length === 0 || total <= 0) {
-      setError('Add at least one item with valid quantity and rate');
+    if (filledItems.length === 0) {
+      setError('Add at least one item');
+      return;
+    }
+
+    const { total } = calcTotals();
+    if (total <= 0) {
+      setError('Enter valid item quantities and rates');
       return;
     }
 
@@ -153,12 +214,14 @@ export default function PurchaseInvoiceModal({
       invoice_date: form.invoice_date,
       supplier_id: supplierId,
       notes: form.notes.trim() || undefined,
-      items: items.map((item) => ({
+      items: filledItems.map((item) => ({
         product_id: item.product_id,
         product_name: item.product_name,
         qty: item.qty,
         rate: item.rate,
-        gst_rate: item.gst_rate
+        gst_rate: item.gst_rate,
+        discount_pct: item.discount_pct || 0,
+        remarks: item.remarks || ''
       }))
     };
 
@@ -184,12 +247,12 @@ export default function PurchaseInvoiceModal({
     onClose();
   }
 
-  const { subtotal, taxAmount, cgst, sgst, igst, total } = calcTotals();
+  const { subtotal, taxAmount, cgst, sgst, igst, total, totalDiscount } = calcTotals();
   const selectedSupplier = suppliers.find((s) => s.id === parseInt(form.supplier_id, 10));
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-content modal-wide" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>
             {mode === 'create' ? 'New Purchase Invoice' : 'View Purchase Invoice'}
@@ -230,19 +293,16 @@ export default function PurchaseInvoiceModal({
 
             <div className="form-group">
               <label>Supplier *</label>
-              <select
-                value={form.supplier_id}
-                onChange={(e) => setForm({ ...form, supplier_id: e.target.value })}
-                required
-                disabled={mode === 'view'}
-              >
-                <option value="">Select supplier</option>
-                {suppliers.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
+              {mode === 'view' ? (
+                <input value={selectedSupplier?.name || ''} readOnly disabled />
+              ) : (
+                <SearchableSelect
+                  options={suppliers.map(s => ({ value: s.id, label: s.name }))}
+                  value={form.supplier_id}
+                  onChange={(v) => setForm({ ...form, supplier_id: v as number })}
+                  placeholder="Select supplier"
+                />
+              )}
               {selectedSupplier && (
                 <p className="customer-balance">
                   Outstanding payable: <strong>{selectedSupplier.current_balance.toLocaleString('en-IN')}</strong>
@@ -265,34 +325,41 @@ export default function PurchaseInvoiceModal({
                   <table className="items-table">
                     <thead>
                       <tr>
+                        {mode !== 'view' && <th className="col-row-num">#</th>}
                         <th className="col-product">Product</th>
                         <th className="col-qty">Qty</th>
                         <th className="col-rate">Rate</th>
                         <th className="col-gst">GST%</th>
+                        <th className="col-discount">D%</th>
                         <th className="col-amount">Amount</th>
+                        {mode !== 'view' && <th className="col-remarks">Remarks</th>}
                         {mode !== 'view' && <th className="col-action"></th>}
                       </tr>
                     </thead>
                     <tbody>
-                      {items.map((item, idx) => {
-                        const amt = item.qty * item.rate;
+                      {(mode === 'view' ? items.filter(item => item.product_id || (item.qty > 0 && item.rate > 0)) : items).map((item, idx) => {
+                        const lineAmt = item.qty * item.rate;
+                        const discountAmt = item.discount_pct ? (lineAmt * item.discount_pct) / 100 : 0;
+                        const amt = lineAmt - discountAmt;
+                        const hasProduct = !!item.product_id;
                         return (
-                          <tr key={idx}>
+                          <tr key={idx} className={hasProduct ? '' : 'row-empty'}>
+                            {mode !== 'view' && <td className="col-row-num">{idx + 1}</td>}
                             <td className="col-product">
                               {mode === 'view' ? (
                                 <span className="product-name">{item.product_name || '—'}</span>
                               ) : (
-                                <select
+                                <SearchableSelect
+                                  options={products.map(p => ({ value: p.id, label: p.name }))}
                                   value={item.product_id || ''}
-                                  onChange={(e) => updateItem(idx, 'product_id', parseInt(e.target.value, 10))}
-                                >
-                                  <option value="">Select product</option>
-                                  {products.map((p) => (
-                                    <option key={p.id} value={p.id}>
-                                      {p.name}
-                                    </option>
-                                  ))}
-                                </select>
+                                  onChange={(v) => updateItem(idx, 'product_id', v as number)}
+                                  placeholder="Select product"
+                                  dropdownWidth={320}
+                                  onSelect={() => {
+                                    const qtyInput = qtyRefs.current.get(idx);
+                                    if (qtyInput) { qtyInput.focus(); qtyInput.select(); }
+                                  }}
+                                />
                               )}
                             </td>
                             <td className="col-qty">
@@ -300,10 +367,12 @@ export default function PurchaseInvoiceModal({
                                 <span className="text-right">{item.qty}</span>
                               ) : (
                                 <input
+                                  ref={(el) => { if (el) qtyRefs.current.set(idx, el); }}
                                   type="number"
                                   min="1"
                                   value={item.qty}
                                   onChange={(e) => updateItem(idx, 'qty', parseInt(e.target.value, 10) || 0)}
+                                  onKeyDown={(e) => handleItemKeyDown(e, idx, 'qty')}
                                 />
                               )}
                             </td>
@@ -317,6 +386,7 @@ export default function PurchaseInvoiceModal({
                                   min="0"
                                   value={item.rate}
                                   onChange={(e) => updateItem(idx, 'rate', parseFloat(e.target.value) || 0)}
+                                  onKeyDown={(e) => handleItemKeyDown(e, idx, 'rate')}
                                 />
                               )}
                             </td>
@@ -330,10 +400,37 @@ export default function PurchaseInvoiceModal({
                                   min="0"
                                   value={item.gst_rate}
                                   onChange={(e) => updateItem(idx, 'gst_rate', parseFloat(e.target.value) || 0)}
+                                  onKeyDown={(e) => handleItemKeyDown(e, idx, 'gst')}
+                                />
+                              )}
+                            </td>
+                            <td className="col-discount">
+                              {mode === 'view' ? (
+                                <span className="text-right">{item.discount_pct > 0 ? `${item.discount_pct}%` : '—'}</span>
+                              ) : (
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  max="100"
+                                  value={item.discount_pct || ''}
+                                  placeholder="0"
+                                  onChange={(e) => updateItem(idx, 'discount_pct', parseFloat(e.target.value) || 0)}
+                                  onKeyDown={(e) => handleItemKeyDown(e, idx, 'discount')}
                                 />
                               )}
                             </td>
                             <td className="col-amount text-right">₹{amt.toFixed(2)}</td>
+                            {mode !== 'view' && (
+                              <td className="col-remarks">
+                                <input
+                                  type="text"
+                                  value={item.remarks || ''}
+                                  placeholder="—"
+                                  onChange={(e) => updateItem(idx, 'remarks', e.target.value)}
+                                />
+                              </td>
+                            )}
                             {mode !== 'view' && (
                               <td className="col-action">
                                 <button type="button" className="btn-remove" onClick={() => removeItem(idx)}>
@@ -351,6 +448,12 @@ export default function PurchaseInvoiceModal({
 
               {items.length > 0 && (
                 <div className="totals-section">
+                  {totalDiscount > 0 && (
+                    <div className="total-row">
+                      <span>Discount:</span>
+                      <span>-₹{totalDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="total-row">
                     <span>Subtotal:</span>
                     <span>₹{subtotal.toFixed(2)}</span>

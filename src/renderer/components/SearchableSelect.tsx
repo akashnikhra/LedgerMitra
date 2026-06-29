@@ -13,9 +13,10 @@ interface Props {
   placeholder?: string;
   className?: string;
   dropdownWidth?: number;
+  onSelect?: () => void;
 }
 
-export default function SearchableSelect({ options, value, onChange, placeholder = 'Search...', className = '', dropdownWidth }: Props) {
+export default function SearchableSelect({ options, value, onChange, placeholder = 'Search...', className = '', dropdownWidth, onSelect }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [highlighted, setHighlighted] = useState(-1);
@@ -62,6 +63,22 @@ export default function SearchableSelect({ options, value, onChange, placeholder
     }
   }, [open]);
 
+  function computeDropdownStyle() {
+    if (!containerRef.current) return {};
+    const rect = containerRef.current.getBoundingClientRect();
+    const DROPDOWN_MAX_HEIGHT = 340;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openAbove = spaceBelow < DROPDOWN_MAX_HEIGHT && rect.top > spaceBelow;
+    return {
+      position: 'fixed' as const,
+      top: openAbove ? rect.top - DROPDOWN_MAX_HEIGHT - 4 : rect.bottom + 4,
+      left: rect.left,
+      width: dropdownWidth || Math.max(rect.width, 280),
+      maxHeight: DROPDOWN_MAX_HEIGHT,
+      zIndex: 10000,
+    };
+  }
+
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -73,6 +90,7 @@ export default function SearchableSelect({ options, value, onChange, placeholder
       e.preventDefault();
       onChange(filtered[highlighted].value);
       setOpen(false);
+      setTimeout(() => onSelect?.(), 0);
     } else if (e.key === 'Escape') {
       setOpen(false);
     }
@@ -81,6 +99,23 @@ export default function SearchableSelect({ options, value, onChange, placeholder
   function handleSelect(opt: Option) {
     onChange(opt.value);
     setOpen(false);
+    setTimeout(() => onSelect?.(), 0);
+  }
+
+  function handleTriggerKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!open) {
+        setDropdownStyle(computeDropdownStyle());
+        setOpen(true);
+      }
+    } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+      if (!open) {
+        setDropdownStyle(computeDropdownStyle());
+        setOpen(true);
+        setTimeout(() => setSearch(e.key), 0);
+      }
+    }
   }
 
   return (
@@ -91,19 +126,11 @@ export default function SearchableSelect({ options, value, onChange, placeholder
           if (open) {
             setOpen(false);
           } else {
-            if (containerRef.current) {
-              const rect = containerRef.current.getBoundingClientRect();
-              setDropdownStyle({
-                position: 'fixed',
-                top: rect.bottom + 4,
-                left: rect.left,
-                width: dropdownWidth || Math.max(rect.width, 280),
-                zIndex: 10000,
-              });
-            }
+            setDropdownStyle(computeDropdownStyle());
             setOpen(true);
           }
         }}
+        onKeyDown={handleTriggerKeyDown}
         tabIndex={0}
         role="combobox"
         aria-expanded={open}

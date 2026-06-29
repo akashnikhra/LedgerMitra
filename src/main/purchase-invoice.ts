@@ -71,7 +71,7 @@ export async function createPurchaseInvoice(data: {
   invoice_date: string;
   invoice_no?: string;
   fy_id?: number;
-  items?: Array<{ product_id?: number; product_name?: string; qty: number; rate: number; gst_rate?: number }>;
+  items?: Array<{ product_id?: number; product_name?: string; qty: number; rate: number; gst_rate?: number; discount_pct?: number; remarks?: string }>;
   notes?: string;
 }): Promise<{ success: boolean; data?: PurchaseInvoice; error?: string }> {
   try {
@@ -83,11 +83,15 @@ export async function createPurchaseInvoice(data: {
 
     let subtotal = 0;
     let taxAmount = 0;
+    let totalDiscount = 0;
     const items = data.items || [];
 
     for (const item of items) {
-      const amt = item.qty * item.rate;
+      const lineAmt = item.qty * item.rate;
+      const discountAmt = item.discount_pct ? (lineAmt * item.discount_pct) / 100 : 0;
+      const amt = lineAmt - discountAmt;
       subtotal += amt;
+      totalDiscount += discountAmt;
       const gst = item.gst_rate ? (amt * item.gst_rate) / 100 : 0;
       taxAmount += gst;
     }
@@ -117,14 +121,15 @@ export async function createPurchaseInvoice(data: {
     const db = getDatabase();
     const insert = db.transaction(() => {
       const r = executeWrite(
-        `INSERT INTO purchase_invoices (invoice_no, fy_id, supplier_id, invoice_date, subtotal, tax_amount, cgst_amount, sgst_amount, igst_amount, total_amount, total_remaining, company_id, notes)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO purchase_invoices (invoice_no, fy_id, supplier_id, invoice_date, subtotal, discount, tax_amount, cgst_amount, sgst_amount, igst_amount, total_amount, total_remaining, company_id, notes)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           invoiceNo,
           fyId,
           data.supplier_id,
           data.invoice_date,
           subtotal,
+          totalDiscount,
           taxAmount,
           cgst,
           sgst,
@@ -139,12 +144,14 @@ export async function createPurchaseInvoice(data: {
       const invoiceId = r.lastInsertRowid as number;
 
       for (const item of items) {
-        const amt = item.qty * item.rate;
+        const lineAmt = item.qty * item.rate;
+        const discountAmt = item.discount_pct ? (lineAmt * item.discount_pct) / 100 : 0;
+        const amt = lineAmt - discountAmt;
         const gstAmt = item.gst_rate ? (amt * item.gst_rate) / 100 : 0;
         db.prepare(
-          `INSERT INTO purchase_invoice_items (invoice_id, product_id, product_name, qty, rate, amount, gst_rate, gst_amount)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-        ).run(invoiceId, item.product_id || null, item.product_name || null, item.qty, item.rate, amt, item.gst_rate || null, gstAmt);
+          `INSERT INTO purchase_invoice_items (invoice_id, product_id, product_name, qty, rate, amount, gst_rate, gst_amount, discount_pct, remarks)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).run(invoiceId, item.product_id || null, item.product_name || null, item.qty, item.rate, amt, item.gst_rate || null, gstAmt, item.discount_pct || 0, item.remarks || null);
 
         if (item.product_id) {
           db.prepare(`UPDATE products SET stock_qty = stock_qty + ?, purchase_rate = ? WHERE id = ? AND company_id = ?`)

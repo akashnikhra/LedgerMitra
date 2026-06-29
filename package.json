@@ -8,7 +8,7 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "package:win": "cmd /c \"set CSC_IDENTITY_AUTO_DISCOVERY=false&& set CSC_LINK=&& electron-builder --win --x64\"",
-    "package:portable": "cmd /c \"set CSC_IDENTITY_AUTO_DISCOVERY=false&& set CSC_LINK=&& electron-builder --win --x64 --dir\"",
+    "package:portable": "cmd /c \"set CSC_IDENTITY_AUTO_DISCOVERY=false&& set CSC_LINK=&& electron-builder --win portable --x64\"",
     "merge:legacy": "node scripts/merge-legacy-data.mjs",
     "postinstall": "node scripts/patch-mdb-reader.mjs && electron-builder install-app-deps",
     "rebuild:native": "electron-builder install-app-deps"

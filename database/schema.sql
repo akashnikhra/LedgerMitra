@@ -101,7 +101,9 @@ CREATE TABLE IF NOT EXISTS invoice_items (
   rate DECIMAL(15, 2) NOT NULL,
   amount DECIMAL(15, 2) NOT NULL,
   gst_rate DECIMAL(5, 2),
-  gst_amount DECIMAL(15, 2) DEFAULT 0
+  gst_amount DECIMAL(15, 2) DEFAULT 0,
+  discount_pct DECIMAL(5, 2) DEFAULT 0,
+  remarks TEXT
 );
 
 CREATE TABLE IF NOT EXISTS ledger_entries (
@@ -164,7 +166,9 @@ CREATE TABLE IF NOT EXISTS purchase_invoice_items (
   rate DECIMAL(15, 2) NOT NULL,
   amount DECIMAL(15, 2) NOT NULL,
   gst_rate DECIMAL(5, 2),
-  gst_amount DECIMAL(15, 2) DEFAULT 0
+  gst_amount DECIMAL(15, 2) DEFAULT 0,
+  discount_pct DECIMAL(5, 2) DEFAULT 0,
+  remarks TEXT
 );
 
 CREATE TABLE IF NOT EXISTS legacy_import_log (
