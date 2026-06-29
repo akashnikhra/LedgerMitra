@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import SearchableSelect from './SearchableSelect';
 
 interface Customer { id: number; name: string; }
@@ -38,6 +38,33 @@ export default function ReceiptModal({ isOpen, onClose, onSave, customers, editR
   const [allocations, setAllocations] = useState<Allocation[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Auto-focus first field on mount
+  useEffect(() => {
+    if (isOpen) setTimeout(() => modalRef.current?.querySelector<HTMLElement>('input, [tabindex]')?.focus(), 0);
+  }, [isOpen]);
+
+  // Global keyboard: Escape to close, Ctrl+S to save, focus trap
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        document.getElementById('receipt-form')?.requestSubmit();
+        return;
+      }
+      if (e.key === 'Tab' && modalRef.current) {
+        const els = modalRef.current.querySelectorAll<HTMLElement>('input:not([disabled]), select:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        if (!els.length) return;
+        const first = els[0], last = els[els.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose]);
 
   const isEdit = !!editReceipt;
 
@@ -116,13 +143,14 @@ export default function ReceiptModal({ isOpen, onClose, onSave, customers, editR
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <div className="modal-content" ref={modalRef} onClick={e => e.stopPropagation()} tabIndex={-1}>
         <div className="modal-header">
           <h3>{isEdit ? 'Edit Payment Receipt' : 'New Payment Receipt'}</h3>
           <button className="modal-close" onClick={onClose}>&times;</button>
         </div>
         <div className="modal-body">
           {error && <div className="alert alert-error">{error}</div>}
+          <form id="receipt-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
           <div className="form-grid">
             <div className="form-group">
               <label>Customer *</label>
@@ -202,10 +230,11 @@ export default function ReceiptModal({ isOpen, onClose, onSave, customers, editR
               </div>
             </div>
           )}
+          </form>
         </div>
         <div className="modal-footer">
           <button className="btn" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleSubmit} disabled={loading || !customerId || !amount}>
+          <button type="submit" form="receipt-form" className="btn btn-primary" disabled={loading || !customerId || !amount}>
             {loading ? 'Saving...' : isEdit ? 'Update Receipt' : 'Save Receipt'}
           </button>
         </div>

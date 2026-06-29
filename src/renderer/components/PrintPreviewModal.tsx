@@ -12,6 +12,33 @@ export default function PrintPreviewModal({ isOpen, onClose, template, id, ledge
   const [html, setHtml] = useState('');
   const [loading, setLoading] = useState(false);
   const previewRef = useRef<HTMLIFrameElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Auto-focus Close button on mount
+  useEffect(() => {
+    if (isOpen) setTimeout(() => modalRef.current?.querySelector<HTMLButtonElement>('.btn')?.focus(), 0);
+  }, [isOpen]);
+
+  // Escape to close, focus trap
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (waModalOpen && !waSending) setWaModalOpen(false);
+        else onClose();
+        return;
+      }
+      if (e.key === 'Tab' && modalRef.current) {
+        const els = modalRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        if (!els.length) return;
+        const first = els[0], last = els[els.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose, waModalOpen, waSending]);
 
   const [waModalOpen, setWaModalOpen] = useState(false);
   const [waMessage, setWaMessage] = useState('');
@@ -188,7 +215,7 @@ export default function PrintPreviewModal({ isOpen, onClose, template, id, ledge
   return (
     <>
       <div className="modal-overlay modal-overlay-large" onClick={onClose}>
-        <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
+        <div className="modal-content modal-large" ref={modalRef} onClick={e => e.stopPropagation()} tabIndex={-1}>
           <div className="modal-header">
             <h3>Print Preview</h3>
             <button className="modal-close" onClick={onClose}>&times;</button>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import type { Supplier } from '@shared/types';
 
 type FormMode = 'create' | 'edit' | 'view';
@@ -45,6 +45,38 @@ export default function SupplierModal({
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Auto-focus first field on mount
+  useEffect(() => {
+    if (mode === 'create' || mode === 'edit') {
+      setTimeout(() => modalRef.current?.querySelector<HTMLInputElement>('input:not([disabled]):not([type="date"])')?.focus(), 0);
+    } else if (mode === 'view') {
+      setTimeout(() => modalRef.current?.querySelector<HTMLButtonElement>('.btn')?.focus(), 0);
+    }
+  }, [mode]);
+
+  // Global keyboard: Escape to close, Ctrl+S to save, focus trap
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (mode === 'view') onEdit?.();
+        else document.getElementById('supplier-form')?.requestSubmit();
+        return;
+      }
+      if (e.key === 'Tab' && modalRef.current) {
+        const els = modalRef.current.querySelectorAll<HTMLElement>('input:not([disabled]), select:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        if (!els.length) return;
+        const first = els[0], last = els[els.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose, onEdit, mode]);
 
   useEffect(() => {
     if (mode === 'create') {
@@ -112,7 +144,7 @@ export default function SupplierModal({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content" ref={modalRef} onClick={(e) => e.stopPropagation()} tabIndex={-1}>
         <div className="modal-header">
           <h2>
             {mode === 'create' ? 'New Supplier' : mode === 'edit' ? 'Edit Supplier' : 'View Supplier'}
@@ -128,7 +160,7 @@ export default function SupplierModal({
         <div className="modal-body">
           {error && <div className="alert alert-error">{error}</div>}
 
-          <form onSubmit={handleSubmit}>
+          <form id="supplier-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Name *</label>
               <input

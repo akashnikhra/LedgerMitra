@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface LicenseStatusData {
   valid: boolean;
@@ -23,6 +23,33 @@ export default function LicenseActivation({ onClose, onActivated }: Props) {
   const [activating, setActivating] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Auto-focus license key input on mount
+  useEffect(() => {
+    if (!success) setTimeout(() => modalRef.current?.querySelector<HTMLInputElement>('input')?.focus(), 0);
+  }, [success]);
+
+  // Escape to close, Ctrl+Enter to activate, focus trap
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !verifying && !activating) { e.preventDefault(); onClose(); return; }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        if (!verifying && !activating && licenseKey.trim()) handleActivate();
+        return;
+      }
+      if (e.key === 'Tab' && modalRef.current) {
+        const els = modalRef.current.querySelectorAll<HTMLElement>('input:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        if (!els.length) return;
+        const first = els[0], last = els[els.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose, verifying, activating, licenseKey]);
   const [status, setStatus] = useState<LicenseStatusData | null>(null);
 
   useEffect(() => {
@@ -74,10 +101,10 @@ export default function LicenseActivation({ onClose, onActivated }: Props) {
       justifyContent: 'center', alignItems: 'center',
       padding: 24
     }}>
-      <div style={{
+      <div ref={modalRef} style={{
         background: 'var(--canvas)', border: '1px solid var(--hairline)',
         borderRadius: 4, maxWidth: 480, width: '100%', padding: 32
-      }}>
+      }} tabIndex={-1}>
         <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
           {success ? 'License Activated!' : 'Activate Premium License'}
         </h2>
