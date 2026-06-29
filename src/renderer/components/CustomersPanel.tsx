@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Customer } from '@shared/types';
 import CustomerModal from './CustomerModal';
+import SearchInput from './SearchInput';
 
 interface Props {
   onChanged?: () => void;
@@ -105,10 +106,10 @@ export default function CustomersPanel({ onChanged }: Props) {
       {error && <div className="alert alert-error">{error}</div>}
 
       <div className="form-group search-group">
-        <input
-          placeholder="Search by name, phone, or GSTIN…"
+        <SearchInput
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={setSearch}
+          placeholder="Search by name, phone, or GSTIN…"
         />
       </div>
 

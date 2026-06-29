@@ -845,6 +845,34 @@ code {
   margin-bottom: var(--spacing-sm);
 }
 
+.search-input-wrapper {
+  position: relative;
+}
+.search-input-wrapper input {
+  padding-right: 36px;
+}
+.search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.search-clear:hover {
+  color: var(--ink);
+  background: var(--hairline);
+}
+
 .invoices-table-card {
   padding: 0;
   overflow: hidden;

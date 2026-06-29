@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Product } from '@shared/types';
 import ProductModal from './ProductModal';
+import SearchInput from './SearchInput';
 
 interface Props {
   onChanged?: () => void;
@@ -68,7 +69,7 @@ export default function ProductsPanel({ onChanged }: Props) {
           ? await window.electronAPI.createProduct(data)
           : await window.electronAPI.updateProduct(selectedId!, data);
 
-      if (!res.success) {
+      if (res && typeof res === 'object' && 'success' in res && !res.success) {
         return { success: false, error: res.error || 'Could not save product' };
       }
 
@@ -108,10 +109,10 @@ export default function ProductsPanel({ onChanged }: Props) {
       {error && <div className="alert alert-error">{error}</div>}
 
       <div className="form-group search-group">
-        <input
-          placeholder="Search by name, SKU, or category…"
+        <SearchInput
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={setSearch}
+          placeholder="Search by name, SKU, or category…"
         />
       </div>
 

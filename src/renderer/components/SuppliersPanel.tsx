@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Supplier } from '@shared/types';
 import SupplierModal from './SupplierModal';
+import SearchInput from './SearchInput';
 
 interface Props {
   onChanged?: () => void;
@@ -106,10 +107,10 @@ export default function SuppliersPanel({ onChanged }: Props) {
       {error && <div className="alert alert-error">{error}</div>}
 
       <div className="form-group search-group">
-        <input
-          placeholder="Search by name, phone, or GSTIN…"
+        <SearchInput
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={setSearch}
+          placeholder="Search by name, phone, or GSTIN…"
         />
       </div>
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Supplier, PurchaseInvoice, Product } from '@shared/types';
 import PurchaseInvoiceModal from './PurchaseInvoiceModal';
+import SearchInput from './SearchInput';
 
 interface Props {
   onChanged?: () => void;
@@ -115,10 +116,10 @@ export default function PurchaseInvoicesPanel({ onChanged }: Props) {
       )}
 
       <div className="form-group search-group">
-        <input
-          placeholder="Search by invoice no. or supplier…"
+        <SearchInput
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={setSearch}
+          placeholder="Search by invoice no. or supplier…"
         />
       </div>
 

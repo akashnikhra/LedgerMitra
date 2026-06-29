@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Customer, Invoice, Product } from '@shared/types';
 import InvoiceModal from './InvoiceModal';
 import PrintPreviewModal from './PrintPreviewModal';
+import SearchInput from './SearchInput';
 
 interface Props {
   onChanged?: () => void;
@@ -142,10 +143,10 @@ export default function InvoicesPanel({ onChanged, initialInvoiceId, onClearInvo
 
       <div className="toolbar-row">
         <div className="form-group search-group">
-          <input
-            placeholder="Search by invoice no. or customer…"
+          <SearchInput
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={setSearch}
+            placeholder="Search by invoice no. or customer…"
           />
         </div>
         <div className="form-group" style={{ minWidth: 140 }}>

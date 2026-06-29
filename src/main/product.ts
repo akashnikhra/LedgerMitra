@@ -77,7 +77,8 @@ export async function createProduct(
       companyId
     ]
   );
-  return queryOne<Product>('SELECT * FROM products WHERE id = ?', [r.lastInsertRowid])!;
+  const newId = Number(r.lastInsertRowid);
+  return queryOne<Product>('SELECT * FROM products WHERE id = ?', [newId])!;
 }
 
 export function updateProduct(
