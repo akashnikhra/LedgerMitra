@@ -33,7 +33,7 @@ export default function ReceiptModal({ isOpen, onClose, onSave, customers, editR
   const [referenceNo, setReferenceNo] = useState('');
   const [bankAccount, setBankAccount] = useState('');
   const [narration, setNarration] = useState('');
-  const [allocMode, setAllocMode] = useState<'auto' | 'manual'>('manual');
+  const [allocMode, setAllocMode] = useState<'auto' | 'manual'>('auto');
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [allocations, setAllocations] = useState<Allocation[]>([]);
   const [error, setError] = useState('');

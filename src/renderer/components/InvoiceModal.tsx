@@ -365,7 +365,7 @@ export default function InvoiceModal({
                         <th className="col-gst">GST%</th>
                         <th className="col-discount">D%</th>
                         <th className="col-amount">Amount</th>
-                        {mode !== 'view' && <th className="col-remarks">Remarks</th>}
+                        <th className="col-remarks">Remarks</th>
                         {mode !== 'view' && <th className="col-action"></th>}
                       </tr>
                     </thead>
@@ -456,16 +456,18 @@ export default function InvoiceModal({
                               )}
                             </td>
                             <td className="col-amount text-right">₹{amt.toFixed(2)}</td>
-                            {mode !== 'view' && (
-                              <td className="col-remarks">
+                            <td className="col-remarks">
+                              {mode === 'view' ? (
+                                <span className="text-muted">{item.remarks || '—'}</span>
+                              ) : (
                                 <input
                                   type="text"
                                   value={item.remarks || ''}
                                   placeholder="—"
                                   onChange={(e) => updateItem(idx, 'remarks', e.target.value)}
                                 />
-                              </td>
-                            )}
+                              )}
+                            </td>
                             {mode !== 'view' && (
                               <td className="col-action">
                                 <button type="button" className="btn-remove" onClick={() => removeItem(idx)}>

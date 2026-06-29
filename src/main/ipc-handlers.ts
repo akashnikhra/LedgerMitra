@@ -269,8 +269,10 @@ export function setupIpcHandlers(_win: BrowserWindow | null): void {
     const items = getInvoiceItems(invoiceId);
     const company = print.getCompanyInfo();
     const customer = getCustomerById(invoice.customer_id);
-    const payments = receipt.listReceipts({ invoiceId });
-    const amountPaid = payments.reduce((sum: number, r: { amount: number }) => sum + r.amount, 0);
+    const allocRow = queryOne<{ total: number }>(
+      'SELECT COALESCE(SUM(allocated_amount), 0) as total FROM receipt_allocations WHERE invoice_id = ?', [invoiceId]
+    );
+    const amountPaid = Number(allocRow?.total) || 0;
     const isSale = invoice.invoice_type === 'SALE';
     const previousOutstanding = isSale
       ? (customer?.current_balance || 0) - invoice.total_amount

@@ -73,48 +73,55 @@ export function renderInvoiceTemplate(data: Record<string, unknown>): string {
 <html>
 <head><meta charset="utf-8"><title>Invoice ${escapeHtml(String(invoice.invoice_no))}</title>
 <style>
-  body { font-family: 'JetBrains Mono', monospace; font-size: 10px; margin: 0; padding: 10mm; color: #1a1a1a; }
-  .header { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 2px solid #1a1a1a; padding-bottom: 8px; }
-  .company-name { font-size: 15px; font-weight: bold; }
-  .invoice-title { font-size: 14px; font-weight: bold; text-align: right; }
-  .invoice-no { font-size: 12px; color: #666; }
-  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-  .info-block h4 { margin: 0 0 4px; border-bottom: 1px solid #ccc; padding-bottom: 2px; font-size: 10px; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
-  th, td { border: 1px solid #333; padding: 4px 6px; text-align: left; }
-  th { background: #f5f5f5; font-weight: bold; }
-  .totals { text-align: right; margin-bottom: 12px; }
-  .totals div { margin: 2px 0; }
-  .totals .total { font-size: 12px; font-weight: bold; border-top: 2px solid #1a1a1a; padding-top: 4px; }
-  .payment-summary { border: 1px solid #333; padding: 8px; margin-bottom: 12px; background: #fafafa; }
-  .payment-summary h4 { margin: 0 0 6px; font-size: 10px; }
-  .payment-summary .row { display: flex; justify-content: space-between; margin: 2px 0; }
-  .payment-summary .pending { font-weight: bold; color: #ef4444; }
-  .payment-summary .paid { color: #22c55e; }
-  .status-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; color: white; font-size: 9px; font-weight: bold; background: ${statusColor}; }
-  .footer { margin-top: 24px; display: flex; justify-content: space-between; font-size: 9px; }
-  .signature { border-top: 1px solid #333; padding-top: 4px; width: 120px; text-align: center; }
+  body { font-family: 'JetBrains Mono', monospace; font-size: 12px; margin: 0; padding: 10mm; color: #000; line-height: 1.4; }
+  .header { display: flex; justify-content: space-between; margin-bottom: 14px; border-bottom: 3px solid #000; padding-bottom: 10px; }
+  .company-name { font-size: 20px; font-weight: bold; color: #000; }
+  .company-info { font-size: 11px; color: #333; margin-top: 2px; }
+  .invoice-title { font-size: 18px; font-weight: bold; text-align: right; color: #000; letter-spacing: 1px; }
+  .invoice-no { font-size: 13px; color: #000; font-weight: bold; }
+  .invoice-date { font-size: 12px; color: #333; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .info-block h4 { margin: 0 0 6px; border-bottom: 2px solid #000; padding-bottom: 3px; font-size: 12px; color: #000; font-weight: bold; text-transform: uppercase; }
+  .info-block div { color: #111; font-size: 12px; margin: 1px 0; }
+  .customer-name { font-size: 14px; font-weight: bold; color: #000; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+  th, td { border: 1px solid #000; padding: 5px 8px; text-align: left; color: #000; }
+  th { background: #ddd; font-weight: bold; color: #000; font-size: 11px; }
+  td { font-size: 12px; }
+  .totals { text-align: right; margin-bottom: 14px; }
+  .totals div { margin: 3px 0; color: #000; font-size: 12px; }
+  .totals .total { font-size: 14px; font-weight: bold; border-top: 3px solid #000; padding-top: 6px; color: #000; }
+  .payment-summary { border: 2px solid #000; padding: 10px; margin-bottom: 14px; background: #f0f0f0; }
+  .payment-summary h4 { margin: 0 0 8px; font-size: 13px; color: #000; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #999; padding-bottom: 4px; }
+  .payment-summary .row { display: flex; justify-content: space-between; margin: 4px 0; color: #000; font-size: 12px; }
+  .payment-summary .row span { color: #000; }
+  .payment-summary .pending { font-weight: bold; font-size: 13px; }
+  .payment-summary .paid { font-weight: bold; }
+  .status-badge { display: inline-block; padding: 2px 8px; border: 2px solid #000; font-size: 11px; font-weight: bold; color: #000; background: #fff; }
+  .status-badge.paid { background: #000; color: #fff; }
+  .footer { margin-top: 28px; display: flex; justify-content: space-between; font-size: 11px; color: #111; }
+  .signature { border-top: 2px solid #000; padding-top: 6px; width: 140px; text-align: center; color: #000; font-size: 11px; }
   @media print { body { padding: 8mm; } @page { size: A5; } }
 </style></head>
 <body>
   <div class="header">
     <div>
       <div class="company-name">${escapeHtml(company?.name || '')}</div>
-      <div>${escapeHtml(company?.address || '')}</div>
-      ${company?.gstin ? `<div>GSTIN: ${escapeHtml(String(company.gstin))}</div>` : ''}
-      ${company?.phone ? `<div>Phone: ${escapeHtml(String(company.phone))}</div>` : ''}
+      <div class="company-info">${escapeHtml(company?.address || '')}</div>
+      ${company?.gstin ? `<div class="company-info">GSTIN: ${escapeHtml(String(company.gstin))}</div>` : ''}
+      ${company?.phone ? `<div class="company-info">Phone: ${escapeHtml(String(company.phone))}</div>` : ''}
     </div>
     <div>
       <div class="invoice-title">INVOICE</div>
       <div class="invoice-no">${escapeHtml(String(invoice.invoice_no))}</div>
-      <div>Date: ${formatDate(String(invoice.invoice_date))}</div>
-      <div>Status: <span class="status-badge">${escapeHtml(statusLabel)}</span></div>
+      <div class="invoice-date">Date: ${formatDate(String(invoice.invoice_date))}</div>
+      <div>Status: <span class="status-badge ${statusLabel === 'PAID' ? 'paid' : ''}">${escapeHtml(statusLabel)}</span></div>
     </div>
   </div>
   <div class="info-grid">
     <div class="info-block">
       <h4>Bill To</h4>
-      <div>${escapeHtml(customer?.name || '')}</div>
+      <div class="customer-name">${escapeHtml(customer?.name || '')}</div>
       <div>${escapeHtml(customer?.address || '')}</div>
       ${customer?.gstin ? `<div>GSTIN: ${escapeHtml(String(customer.gstin))}</div>` : ''}
       ${customer?.phone ? `<div>Phone: ${escapeHtml(String(customer.phone))}</div>` : ''}
