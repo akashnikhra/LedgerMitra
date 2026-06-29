@@ -54,34 +54,31 @@ export async function createProduct(
   const companyId = companyIdOverride ?? getActiveCompanyId();
   if (!companyId) throw new Error('No active company');
 
-  const existing = getProductBySku(data.sku, companyId);
-  if (existing) throw new Error(`SKU "${data.sku}" already exists (product: ${existing.name})`);
+  let sku = data.sku;
 
-  try {
-    const r = executeWrite(
-      `INSERT INTO products (sku, name, category, purchase_rate, selling_rate, gst_rate, hsn_code, unit, stock_qty, opening_stock, reorder_level, company_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        data.sku,
-        data.name,
-        data.category || null,
-        data.purchase_rate ?? null,
-        data.selling_rate ?? 0,
-        data.gst_rate ?? null,
-        data.hsn_code || null,
-        data.unit || 'Nos',
-        data.stock_qty ?? 0,
-        data.opening_stock ?? 0,
-        data.reorder_level ?? null,
-        companyId
-      ]
-    );
-    return queryOne<Product>('SELECT * FROM products WHERE id = ?', [r.lastInsertRowid])!;
-  } catch (e) {
-    throw new Error((e as Error).message.includes('UNIQUE')
-      ? `SKU "${data.sku}" already exists`
-      : (e as Error).message);
+  if (getProductBySku(sku, companyId)) {
+    sku = getNextSku(companyId);
   }
+
+  const r = executeWrite(
+    `INSERT INTO products (sku, name, category, purchase_rate, selling_rate, gst_rate, hsn_code, unit, stock_qty, opening_stock, reorder_level, company_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      sku,
+      data.name,
+      data.category || null,
+      data.purchase_rate ?? null,
+      data.selling_rate ?? 0,
+      data.gst_rate ?? null,
+      data.hsn_code || null,
+      data.unit || 'Nos',
+      data.stock_qty ?? 0,
+      data.opening_stock ?? 0,
+      data.reorder_level ?? null,
+      companyId
+    ]
+  );
+  return queryOne<Product>('SELECT * FROM products WHERE id = ?', [r.lastInsertRowid])!;
 }
 
 export function updateProduct(
