@@ -52,7 +52,7 @@ export default function ProductModal({
 
   useEffect(() => {
     if (mode === 'create') {
-      window.electron.getNextSku().then((sku: string) => {
+      window.electronAPI.getNextSku().then((sku: string) => {
         setForm({ ...emptyForm, sku });
       });
     } else if (product) {
