@@ -36,18 +36,30 @@
       font-size: 16px;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
     a { color: inherit; text-decoration: none; }
     img { max-width: 100%; display: block; }
     .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
     pre { font-family: var(--font); }
 
+    /* Scroll progress bar */
+    .scroll-progress {
+      position: fixed; top: 0; left: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--ink));
+      z-index: 100; transform-origin: left; transform: scaleX(0);
+      transition: transform 0.1s linear;
+    }
+
     .nav {
       position: sticky; top: 0; z-index: 10;
-      background: var(--canvas);
+      background: rgba(253, 252, 252, 0.92);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--hairline);
       height: 56px;
+      transition: box-shadow 0.3s;
     }
+    .nav.scrolled { box-shadow: 0 1px 8px rgba(0,0,0,0.06); }
     .nav .container {
       display: flex; align-items: center; justify-content: space-between;
       height: 100%;
@@ -74,9 +86,10 @@
       background: var(--ink); color: var(--on-dark);
       border-radius: 4px; font-family: var(--font);
       font-size: 14px; font-weight: 500;
-      border: none; cursor: pointer; transition: background 0.2s;
+      border: none; cursor: pointer;
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
     }
-    .btn-dark:hover { background: var(--ink-deep); }
+    .btn-dark:hover { background: var(--ink-deep); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
     .btn-outline {
       display: inline-flex; align-items: center;
       height: 36px; padding: 4px 20px;
@@ -84,9 +97,9 @@
       border: 1px solid var(--hairline-strong);
       border-radius: 4px; font-family: var(--font);
       font-size: 14px; font-weight: 500;
-      cursor: pointer; transition: background 0.2s;
+      cursor: pointer; transition: background 0.2s, transform 0.2s;
     }
-    .btn-outline:hover { background: var(--surface-soft); }
+    .btn-outline:hover { background: var(--surface-soft); transform: translateY(-1px); }
     .ascii-wordmark {
       font-family: var(--font); font-size: 14px; font-weight: 700;
       letter-spacing: 4px; line-height: 1.2; color: var(--ink);
@@ -95,9 +108,12 @@
 
     .section { padding: 48px 0; }
     .section + .section { border-top: 1px solid var(--hairline); }
+
+    /* Hero */
     .hero-tui {
       background: var(--surface-dark); padding: 48px 24px;
-      text-align: center;
+      text-align: center; position: relative; overflow: hidden;
+      border-radius: 8px;
     }
     .hero-tui .ascii-wordmark { color: var(--on-dark); font-size: 20px; }
     .tui-prompt {
@@ -109,31 +125,57 @@
     .hero-headline {
       font-size: 38px; font-weight: 700; color: var(--ink);
       line-height: 1.5; margin-bottom: 8px;
-      animation: fadeUp 0.8s ease-out;
+      opacity: 0; transform: translateY(30px);
+      animation: heroReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
-    .hero-sub { animation: fadeUp 0.8s ease-out 0.15s both; }
-    .hero-ctas { animation: fadeUp 0.8s ease-out 0.3s both; }
-    @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    .hero-sub {
+      opacity: 0; transform: translateY(30px);
+      animation: heroReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.12s forwards;
+    }
+    .hero-ctas {
+      opacity: 0; transform: translateY(30px);
+      animation: heroReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.24s forwards;
+    }
+    @keyframes heroReveal {
+      to { opacity: 1; transform: translateY(0); }
+    }
     .hero-sub {
       color: var(--mute); font-size: 16px;
       max-width: 600px; margin: 0 auto 24px;
     }
     .hero-ctas { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+    /* Section headings */
     .section-heading {
       font-size: 20px; font-weight: 700; color: var(--ink);
       text-align: center; margin-bottom: 32px;
+      opacity: 0; transform: translateY(20px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
     }
+    .section-heading.visible { opacity: 1; transform: translateY(0); }
+
+    /* Feature rows */
     .feature-row {
       padding: 12px 0; border-top: 1px solid var(--hairline);
       font-size: 15px;
+      opacity: 0; transform: translateX(-20px);
+      transition: opacity 0.5s ease-out, transform 0.5s ease-out, border-color 0.3s;
     }
+    .feature-row.visible { opacity: 1; transform: translateX(0); }
     .feature-row:first-child { border-top: none; }
     .feature-row strong { color: var(--ink); }
+    .feature-row:hover { border-color: var(--ink); }
+
+    /* Snippet pills */
     .snippet-pill {
       display: flex; align-items: center; gap: 16px;
       background: var(--surface-card); border-radius: 4px;
       padding: 16px; margin: 8px 0;
+      opacity: 0; transform: translateY(15px) scale(0.98);
+      transition: opacity 0.5s ease-out, transform 0.5s ease-out, box-shadow 0.3s;
     }
+    .snippet-pill.visible { opacity: 1; transform: translateY(0) scale(1); }
+    .snippet-pill:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
     .snippet-pill code {
       font-family: var(--font); font-size: 14px; color: var(--ink);
     }
@@ -142,44 +184,127 @@
       background: var(--surface-soft); border-radius: 4px;
       display: flex; align-items: center; justify-content: center;
       font-weight: 700; font-size: 14px; color: var(--ink);
+      transition: background 0.2s, color 0.2s;
     }
+    .snippet-pill:hover .snippet-num { background: var(--ink); color: var(--on-dark); }
+
+    /* Screenshot pills */
     .screenshot-pill {
       background: var(--surface-card); border-radius: 4px;
       padding: 16px; margin: 16px 0; text-align: center;
+      opacity: 0; transform: translateY(30px) scale(0.97);
+      transition: opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s;
     }
-    .screenshot-pill img { border-radius: 2px; margin: 0 auto; }
+    .screenshot-pill.visible { opacity: 1; transform: translateY(0) scale(1); }
+    .screenshot-pill:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+    .screenshot-pill img { border-radius: 2px; margin: 0 auto; cursor: pointer; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    .screenshot-pill:hover img { transform: scale(1.02); }
+
+    /* Cards */
+    .card-hover {
+      transition: border-color 0.3s, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s;
+      opacity: 0; transform: translateY(20px);
+    }
+    .card-hover.visible { opacity: 1; transform: translateY(0); }
+    .card-hover:hover { border-color: var(--ink); transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+
+    /* Footer */
     .footer { padding: 32px 0; border-top: 1px solid var(--hairline); }
     .footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
-    .footer-links a { color: var(--body); font-size: 14px; transition: color 0.2s; cursor: pointer; }
-    .footer-links a:hover { color: var(--ink); }
+    .footer-links a { color: var(--body); font-size: 14px; transition: color 0.2s, transform 0.2s; cursor: pointer; display: inline-block; }
+    .footer-links a:hover { color: var(--ink); transform: translateY(-1px); }
+    .footer-contact { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-bottom:12px; font-size:13px; }
+    .footer-contact a { display:inline-flex; align-items:center; gap:6px; color:var(--mute); transition:color 0.2s, transform 0.2s; }
+    .footer-contact a:hover { color:var(--ink); transform: translateY(-1px); }
+    .footer-copy { text-align: center; color: var(--mute); font-size: 14px; }
+
+    /* Fade-in base */
     .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
     .fade-in.visible { opacity: 1; transform: translateY(0); }
-    .parallax { will-change: transform; }
-    .parallax-content { will-change: transform; }
-    .parallax-bg { will-change: transform; }
-    .parallax-item { will-change: transform; }
+
+    /* Parallax layers */
     .parallax-bg-section {
       position: absolute; inset: 0; opacity: 0.025; pointer-events: none;
       background-image: radial-gradient(circle, #201d1d 1px, transparent 1px);
       background-size: 32px 32px;
     }
-    .card-hover { transition: border-color 0.3s, transform 0.3s; }
-    .card-hover:hover { border-color: var(--ink); transform: translateY(-2px); }
-    .footer-contact { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-bottom:12px; font-size:13px; }
-    .footer-contact a { display:inline-flex; align-items:center; gap:6px; color:var(--mute); transition:color 0.2s; }
-    .footer-contact a:hover { color:var(--ink); }
-    .footer-copy { text-align: center; color: var(--mute); font-size: 14px; }
-    .screenshot-pill img { cursor: pointer; }
+
+    /* Lightbox */
     .lightbox {
       display: none; position: fixed; inset: 0; z-index: 100;
       background: rgba(15,0,0,0.85); justify-content: center; align-items: center;
       padding: 24px; cursor: pointer;
+      animation: lightboxIn 0.3s ease-out;
     }
     .lightbox.open { display: flex; }
+    @keyframes lightboxIn { from { opacity: 0; } to { opacity: 1; } }
     .lightbox img {
       max-width: 100%; max-height: 100%; border-radius: 4px;
       cursor: default; box-shadow: 0 4px 32px rgba(0,0,0,0.4);
+      animation: lightboxImgIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
+    @keyframes lightboxImgIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+    /* Stagger delays for feature rows */
+    .feature-row:nth-child(1) { transition-delay: 0s; }
+    .feature-row:nth-child(2) { transition-delay: 0.05s; }
+    .feature-row:nth-child(3) { transition-delay: 0.1s; }
+    .feature-row:nth-child(4) { transition-delay: 0.15s; }
+    .feature-row:nth-child(5) { transition-delay: 0.2s; }
+    .feature-row:nth-child(6) { transition-delay: 0.25s; }
+    .feature-row:nth-child(7) { transition-delay: 0.3s; }
+    .feature-row:nth-child(8) { transition-delay: 0.35s; }
+    .feature-row:nth-child(9) { transition-delay: 0.4s; }
+    .feature-row:nth-child(10) { transition-delay: 0.45s; }
+    .feature-row:nth-child(11) { transition-delay: 0.5s; }
+    .feature-row:nth-child(12) { transition-delay: 0.55s; }
+    .feature-row:nth-child(13) { transition-delay: 0.6s; }
+    .feature-row:nth-child(14) { transition-delay: 0.65s; }
+
+    /* Stagger for cards */
+    .card-hover:nth-child(1) { transition-delay: 0s; }
+    .card-hover:nth-child(2) { transition-delay: 0.06s; }
+    .card-hover:nth-child(3) { transition-delay: 0.12s; }
+    .card-hover:nth-child(4) { transition-delay: 0.18s; }
+    .card-hover:nth-child(5) { transition-delay: 0.24s; }
+    .card-hover:nth-child(6) { transition-delay: 0.3s; }
+    .card-hover:nth-child(7) { transition-delay: 0.36s; }
+    .card-hover:nth-child(8) { transition-delay: 0.42s; }
+    .card-hover:nth-child(9) { transition-delay: 0.48s; }
+
+    /* Stagger for snippet pills */
+    .snippet-pill:nth-child(1) { transition-delay: 0s; }
+    .snippet-pill:nth-child(2) { transition-delay: 0.08s; }
+    .snippet-pill:nth-child(3) { transition-delay: 0.16s; }
+
+    /* Pricing cards */
+    .pricing-card {
+      opacity: 0; transform: translateY(30px) scale(0.97);
+      transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s, border-color 0.3s;
+    }
+    .pricing-card.visible { opacity: 1; transform: translateY(0) scale(1); }
+    .pricing-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.1); }
+    .pricing-card:nth-child(1) { transition-delay: 0s; }
+    .pricing-card:nth-child(2) { transition-delay: 0.1s; }
+    .pricing-card:nth-child(3) { transition-delay: 0.2s; }
+
+    /* Migration rows */
+    .migration-row {
+      opacity: 0; transform: translateX(-15px);
+      transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    }
+    .migration-row.visible { opacity: 1; transform: translateX(0); }
+    .migration-row:nth-child(1) { transition-delay: 0s; }
+    .migration-row:nth-child(2) { transition-delay: 0.05s; }
+    .migration-row:nth-child(3) { transition-delay: 0.1s; }
+    .migration-row:nth-child(4) { transition-delay: 0.15s; }
+    .migration-row:nth-child(5) { transition-delay: 0.2s; }
+    .migration-row:nth-child(6) { transition-delay: 0.25s; }
+    .migration-row:nth-child(7) { transition-delay: 0.3s; }
+    .migration-row:nth-child(8) { transition-delay: 0.35s; }
+    .migration-row:nth-child(9) { transition-delay: 0.4s; }
+
+    /* Responsive */
     @media (max-width: 480px) {
       .container { padding: 0 16px; }
       .hero-headline { font-size: 22px; }
@@ -229,12 +354,19 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0ms !important;
+        transition-duration: 0.01ms !important;
+        transition-delay: 0ms !important;
+      }
     }
   </style>
 </head>
 <body>
-  <nav class="nav">
+  <div class="scroll-progress" id="scrollProgress"></div>
+
+  <nav class="nav" id="mainNav">
     <div class="container">
       <div style="display:flex; align-items:center; justify-content:space-between; width:100%">
         <a href="#" style="font-weight:700; font-size:14px; letter-spacing:4px; color:var(--ink); text-decoration:none">LEDGERMITRA</a>
@@ -258,8 +390,8 @@
 
   <section class="section" style="padding-top:24px; position:relative; overflow:hidden">
     <div class="container" style="position:relative; z-index:1">
-      <div class="hero-tui parallax" style="position:relative; overflow:hidden">
-        <div class="parallax-bg" style="position:absolute; inset:0; opacity:0.04; background-image:radial-gradient(circle, #fdfcfc 1px, transparent 1px); background-size:24px 24px"></div>
+      <div class="hero-tui" id="heroTui" style="position:relative; overflow:hidden">
+        <div class="parallax-bg" id="heroBg" style="position:absolute; inset:0; opacity:0.04; background-image:radial-gradient(circle, #fdfcfc 1px, transparent 1px); background-size:24px 24px"></div>
         <div style="font-size:20px; font-weight:700; letter-spacing:4px; color:var(--on-dark); margin-bottom:16px">LEDGERMITRA</div>
         <p style="color:var(--on-dark-mute); font-size:13px; margin-bottom:24px">v1.3.0 — offline accounting for Windows</p>
         <div style="background:var(--surface-dark-elevated); border-radius:4px; padding:12px 16px; text-align:left; font-size:13px; max-width:520px; margin:0 auto">
@@ -269,10 +401,10 @@
         <p class="tui-hint" style="margin-top:24px">tab navigate  ·  ctrl-p commands  ·  esc back</p>
       </div>
 
-      <div class="parallax-content" style="text-align:center; margin-top:32px">
+      <div id="heroContent" style="text-align:center; margin-top:32px">
         <h1 class="hero-headline">Offline desktop accounting.</h1>
         <p class="hero-sub">
-          LedgerMitra replaces Speed Plus legacy accounting software. All data stays on your machine — no cloud, no subscriptions.
+          LedgerMitra replaces Speed Plus legacy accounting software. All data stays on your machine — no cloud, no subscriptions. Runs from a USB drive.
         </p>
 
         <div class="hero-ctas">
@@ -283,35 +415,37 @@
   </section>
 
   <section class="section fade-in" id="features" style="position:relative; overflow:hidden">
-    <div class="parallax-bg-section parallax-item" data-p="30"></div>
+    <div class="parallax-bg-section" data-parallax="20"></div>
     <div class="container">
       <h2 class="section-heading">Features</h2>
 
       <div class="feature-row"><strong>[+] Invoicing</strong> — Create GST-ready sales invoices with line items, auto-numbering, and CGST/SGST/IGST support.</div>
-      <div class="screenshot-pill parallax-item" data-p="40"><img src="assets/invoice-form.png" alt="Invoice Form" style="width:100%; max-width:720px"></div>
+      <div class="screenshot-pill" data-parallax="30"><img src="assets/invoice-form.png" alt="Invoice Form" style="width:100%; max-width:720px"></div>
 
       <div class="feature-row"><strong>[+] Dashboard</strong> — KPI cards, monthly revenue trends, top debtors, invoice aging, and low stock alerts — all at a glance.</div>
-      <div class="screenshot-pill parallax-item" data-p="40"><img src="assets/dashboard-light.png" alt="Dashboard" style="width:100%; max-width:720px"></div>
+      <div class="screenshot-pill" data-parallax="30"><img src="assets/dashboard-light.png" alt="Dashboard" style="width:100%; max-width:720px"></div>
 
       <div class="feature-row"><strong>[+] Purchase Invoices</strong> — Record purchases with stock updates and ledger integration. Full GST support.</div>
 
       <div class="feature-row"><strong>[+] Receipts</strong> — Receive payments with auto-allocation, edit existing receipts, view legacy imported payments, and print on A5 paper.</div>
-      <div class="screenshot-pill parallax-item" data-p="40"><img src="assets/receipt.png" alt="Receipt Entry" style="width:100%; max-width:720px"></div>
+      <div class="screenshot-pill" data-parallax="30"><img src="assets/receipt.png" alt="Receipt Entry" style="width:100%; max-width:720px"></div>
 
       <div class="feature-row"><strong>[+] Ledger</strong> — Customer-wise, year-wise, and all-customers ledger with debit/credit columns, running balance, and date range filters.</div>
-      <div class="screenshot-pill parallax-item" data-p="40"><img src="assets/ledger.png" alt="Ledger View" style="width:100%; max-width:720px"></div>
+      <div class="screenshot-pill" data-parallax="30"><img src="assets/ledger.png" alt="Ledger View" style="width:100%; max-width:720px"></div>
 
       <div class="feature-row"><strong>[+] Products & Stock</strong> — SKU-based product catalog with rates, GST, HSN codes, stock tracking, and reorder alerts.</div>
 
       <div class="feature-row"><strong>[+] Customers & Suppliers</strong> — Party master management with opening balances, GSTIN, state, and full transaction history.</div>
 
       <div class="feature-row"><strong>[+] Legacy Import</strong> — Full migration engine from Speed Plus MDB/BMW files. Multi-FY detection, deduplication, audit logging.</div>
-      <div class="screenshot-pill parallax-item" data-p="40"><img src="assets/legacy-import.png" alt="Legacy Import" style="width:100%; max-width:720px"></div>
+      <div class="screenshot-pill" data-parallax="30"><img src="assets/legacy-import.png" alt="Legacy Import" style="width:100%; max-width:720px"></div>
 
       <div class="feature-row"><strong>[*] Private & Offline</strong> — Your financial data never leaves your machine. Single SQLite file. Backup by copying it.</div>
 
+      <div class="feature-row"><strong>[+] Portable USB Mode</strong> — Run from a USB drive. All data stays on the USB — zero traces on the host machine. Auto-cleanup on exit.</div>
+
       <div class="feature-row"><strong>[+] WhatsApp Integration</strong> — Send invoice and receipt PDFs directly via WhatsApp Web with customizable message templates.</div>
-      <div class="screenshot-pill parallax-item" data-p="40"><img src="assets/whatsapp.png" alt="WhatsApp Integration" style="width:100%; max-width:720px"></div>
+      <div class="screenshot-pill" data-parallax="30"><img src="assets/whatsapp.png" alt="WhatsApp Integration" style="width:100%; max-width:720px"></div>
 
       <div class="feature-row"><strong>[+] Print & PDF</strong> — Invoice and receipt printing on A5 paper, ledger on A4, with save-to-PDF and WhatsApp sharing.</div>
 
@@ -320,54 +454,58 @@
   </section>
 
   <section class="section fade-in" id="why" style="position:relative; overflow:hidden">
-    <div class="parallax-bg-section parallax-item" data-p="30"></div>
+    <div class="parallax-bg-section" data-parallax="20"></div>
     <div class="container">
       <h2 class="section-heading">Why LedgerMitra?</h2>
       <p style="color:var(--mute); text-align:center; margin-bottom:32px; font-size:14px">Modern accounting without the cloud — built for Windows, built for privacy.</p>
-      <div style="display:flex; flex-wrap:wrap; gap:16px; justify-content:center" class="parallax-item" data-p="20">
-        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
+      <div style="display:flex; flex-wrap:wrap; gap:16px; justify-content:center">
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px; border:1px solid transparent" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">Offline-First</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">All data lives in a local SQLite database. No server, no cloud dependency, no monthly fees. Backup is a file copy.</p>
         </div>
-        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px; border:1px solid transparent" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">Double-Entry Ledger</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">Every invoice, receipt, and payment creates debit/credit entries. Balances are always consistent — no reconciliation surprises.</p>
         </div>
-        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px; border:1px solid transparent" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">GST-Ready</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">CGST + SGST (intra-state) and IGST (inter-state) with configurable rates per product. Auto-calculated on every invoice.</p>
         </div>
-        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px; border:1px solid transparent" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">Invoice Aging</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">Outstanding amounts tracked per invoice with aging buckets for follow-up. Know exactly who owes what and since when.</p>
         </div>
-        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px; border:1px solid transparent" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">Balance Carry-Forward</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">Customer opening balances flow across financial years with full audit trail via <code style="background:var(--surface-soft); padding:1px 4px; font-family:var(--font); font-size:12px">fy_carry_forwards</code>.</p>
         </div>
-        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px; border:1px solid transparent" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">Stock Tracking</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">Product stock updated on invoice/purchase creation. Reorder level alerts on dashboard — never run out of tracked items.</p>
         </div>
-        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px; border:1px solid transparent" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">Auto-Numbering</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">Invoice and receipt numbers auto-generated per financial year. No gaps, no duplicates, no manual entry.</p>
         </div>
-        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px" class="card-hover">
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px; border:1px solid transparent" class="card-hover">
           <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">Payment Allocation</p>
           <p style="font-size:13px; color:var(--mute); line-height:1.6">Receipts can be auto-allocated, manually assigned, or edited later. Legacy imported payments are fully integrated.</p>
+        </div>
+        <div style="flex:1; min-width:240px; background:var(--surface-card); border-radius:4px; padding:20px; border:1px solid transparent" class="card-hover">
+          <p style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px">Portable USB Mode</p>
+          <p style="font-size:13px; color:var(--mute); line-height:1.6">Run from a USB drive — all data stays on the USB, zero traces on the host machine. Auto-cleanup on exit. Perfect for shared or rented computers.</p>
         </div>
       </div>
     </div>
   </section>
 
   <section class="section fade-in" id="pricing" style="position:relative; overflow:hidden">
-    <div class="parallax-bg-section parallax-item" data-p="30"></div>
+    <div class="parallax-bg-section" data-parallax="20"></div>
     <div class="container">
       <h2 class="section-heading">Simple Pricing</h2>
       <p style="color:var(--mute); text-align:center; margin-bottom:32px; font-size:14px">Core features are free. Premium features require a license key.</p>
       <div style="display:flex; flex-wrap:wrap; gap:16px; justify-content:center">
-        <div style="flex:1; min-width:240px; max-width:300px; background:var(--surface-card); border-radius:4px; padding:24px; border:1px solid var(--hairline)" class="card-hover">
+        <div style="flex:1; min-width:240px; max-width:300px; background:var(--surface-card); border-radius:4px; padding:24px; border:1px solid var(--hairline)" class="pricing-card">
           <p style="font-size:15px; font-weight:700; color:var(--ink); margin-bottom:4px">Free</p>
           <p style="font-size:24px; font-weight:700; color:var(--ink); margin-bottom:12px">₹0</p>
           <p style="font-size:12px; color:var(--muted); margin-bottom:16px">Core accounting — forever free</p>
@@ -378,7 +516,7 @@
             <li style="padding:4px 0">✓ 30-day full trial</li>
           </ul>
         </div>
-        <div style="flex:1; min-width:240px; max-width:300px; background:var(--surface-dark); border-radius:4px; padding:24px; color:var(--on-dark)" class="card-hover">
+        <div style="flex:1; min-width:240px; max-width:300px; background:var(--surface-dark); border-radius:4px; padding:24px; color:var(--on-dark); border:1px solid transparent" class="pricing-card">
           <p style="font-size:15px; font-weight:700; margin-bottom:4px">Premium Perpetual</p>
           <p style="font-size:24px; font-weight:700; margin-bottom:12px">₹4,999</p>
           <p style="font-size:12px; color:var(--on-dark-mute); margin-bottom:16px">One-time purchase — own it forever</p>
@@ -391,7 +529,7 @@
             <li style="padding:4px 0">✓ 1 year updates</li>
           </ul>
         </div>
-        <div style="flex:1; min-width:240px; max-width:300px; background:var(--surface-card); border-radius:4px; padding:24px; border:1px solid var(--hairline)" class="card-hover">
+        <div style="flex:1; min-width:240px; max-width:300px; background:var(--surface-card); border-radius:4px; padding:24px; border:1px solid var(--hairline)" class="pricing-card">
           <p style="font-size:15px; font-weight:700; color:var(--ink); margin-bottom:4px">Premium Yearly</p>
           <p style="font-size:24px; font-weight:700; color:var(--ink); margin-bottom:12px">₹1,999<span style="font-size:14px; font-weight:400">/year</span></p>
           <p style="font-size:12px; color:var(--muted); margin-bottom:16px">Subscribe — always up to date</p>
@@ -407,24 +545,24 @@
   </section>
 
   <section class="section fade-in" id="migration" style="position:relative; overflow:hidden">
-    <div class="parallax-bg-section parallax-item" data-p="30"></div>
+    <div class="parallax-bg-section" data-parallax="20"></div>
     <div class="container">
       <h2 class="section-heading">Migration from Speed Plus</h2>
       <p style="color:var(--mute); margin-bottom:24px">
         LedgerMitra provides a complete migration pipeline from Speed Plus (<code style="background:var(--surface-soft); padding:1px 4px">.mdb</code> / <code style="background:var(--surface-soft); padding:1px 4px">.bmw</code>) files. Your data, your history — moved in one pass.
       </p>
 
-      <div class="feature-row"><strong>[+] Items</strong> → Products (SKU, rates, GST, stock)</div>
-      <div class="feature-row"><strong>[+] Account</strong> → Customers (party ledgers, opening balance)</div>
-      <div class="feature-row"><strong>[+] BillMaster</strong> → Invoices (sales vouchers)</div>
-      <div class="feature-row"><strong>[+] Ledger</strong> → Ledger Entries (payments / receipts)</div>
-      <div class="feature-row"><strong>[+] Company</strong> → Company (name during wizard)</div>
+      <div class="feature-row migration-row"><strong>[+] Items</strong> → Products (SKU, rates, GST, stock)</div>
+      <div class="feature-row migration-row"><strong>[+] Account</strong> → Customers (party ledgers, opening balance)</div>
+      <div class="feature-row migration-row"><strong>[+] BillMaster</strong> → Invoices (sales vouchers)</div>
+      <div class="feature-row migration-row"><strong>[+] Ledger</strong> → Ledger Entries (payments / receipts)</div>
+      <div class="feature-row migration-row"><strong>[+] Company</strong> → Company (name during wizard)</div>
 
       <div style="margin-top:24px">
-        <div class="feature-row"><strong>[+]</strong> Multi-FY detection within a single MDB file</div>
-        <div class="feature-row"><strong>[+]</strong> Deduplication via file hash tracking</div>
-        <div class="feature-row"><strong>[+]</strong> Balance carry-forward across financial years</div>
-        <div class="feature-row"><strong>[+]</strong> Audit logging with skipped item details</div>
+        <div class="feature-row migration-row"><strong>[+]</strong> Multi-FY detection within a single MDB file</div>
+        <div class="feature-row migration-row"><strong>[+]</strong> Deduplication via file hash tracking</div>
+        <div class="feature-row migration-row"><strong>[+]</strong> Balance carry-forward across financial years</div>
+        <div class="feature-row migration-row"><strong>[+]</strong> Audit logging with skipped item details</div>
       </div>
 
       <div style="margin-top:32px">
@@ -434,23 +572,23 @@
   </section>
 
   <section class="section fade-in" id="quickstart" style="position:relative; overflow:hidden">
-    <div class="parallax-bg-section parallax-item" data-p="30"></div>
+    <div class="parallax-bg-section" data-parallax="20"></div>
     <div class="container">
       <h2 class="section-heading">Quick Start</h2>
-      <div class="snippet-pill parallax-item" data-p="20">
+      <div class="snippet-pill">
         <span class="snippet-num">1</span>
         <code>git clone https://github.com/akashnikhra/LedgerMitra.git</code>
       </div>
-      <div class="snippet-pill parallax-item" data-p="20">
+      <div class="snippet-pill">
         <span class="snippet-num">2</span>
         <code>cd LedgerMitra &amp;&amp; setup.bat</code>
       </div>
-      <div class="snippet-pill parallax-item" data-p="20">
+      <div class="snippet-pill">
         <span class="snippet-num">3</span>
         <code>start.bat</code>
       </div>
 
-      <div style="background:var(--surface-card); border-radius:4px; padding:12px 16px; margin-top:16px" class="parallax-item" data-p="10">
+      <div style="background:var(--surface-card); border-radius:4px; padding:12px 16px; margin-top:16px">
         <p style="color:var(--mute); font-size:14px">Default login: <code style="background:var(--surface-soft); padding:2px 6px; border-radius:2px;">admin</code> / <code style="background:var(--surface-soft); padding:2px 6px; border-radius:2px;">admin123</code></p>
         <p style="color:var(--ash); font-size:12px; margin-top:6px">New users: <code style="background:var(--surface-soft); padding:2px 6px; border-radius:2px;">setup.bat</code> checks for Node.js, npm, and Git automatically</p>
       </div>
@@ -459,7 +597,7 @@
 
   <div class="lightbox" id="lightbox"><img src="" alt=""></div>
 
-  <footer class="footer parallax-item" data-p="15">
+  <footer class="footer">
     <div class="container">
       <div class="footer-links">
         <a href="https://github.com/akashnikhra/LedgerMitra">GitHub</a>
@@ -492,9 +630,9 @@
 
 <script>
 ;(function() {
+  // Lightbox
   var lightbox = document.getElementById('lightbox');
   var lightboxImg = lightbox.querySelector('img');
-
   document.querySelectorAll('.screenshot-pill img').forEach(function(img) {
     img.addEventListener('click', function(e) {
       e.stopPropagation();
@@ -506,14 +644,9 @@
   lightbox.addEventListener('click', function() { this.classList.remove('open'); });
   lightboxImg.addEventListener('click', function(e) { e.stopPropagation(); });
 
-  var sections = document.querySelectorAll('.fade-in');
-  var heroTui = document.querySelector('.parallax');
-  var heroContent = document.querySelector('.parallax-content');
-  var heroBg = document.querySelector('.parallax-bg');
-  var ticking = false;
+  // Mobile nav
   var toggle = document.getElementById('navToggle');
   var links = document.getElementById('navLinks');
-
   if (toggle && links) {
     toggle.addEventListener('click', function() {
       links.classList.toggle('open');
@@ -527,29 +660,70 @@
     });
   }
 
+  // Scroll progress bar
+  var scrollProgress = document.getElementById('scrollProgress');
+  var nav = document.getElementById('mainNav');
+
+  // IntersectionObserver for scroll-triggered animations
+  var animElements = document.querySelectorAll(
+    '.fade-in, .section-heading, .feature-row, .snippet-pill, .screenshot-pill, .card-hover, .pricing-card, .migration-row'
+  );
+
   var observer = new IntersectionObserver(function(entries) {
-    entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('visible'); });
-  }, { threshold: 0.1 });
-  sections.forEach(function(s) { observer.observe(s); });
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+  animElements.forEach(function(el) { observer.observe(el); });
+
+  // Parallax on scroll
+  var heroTui = document.getElementById('heroTui');
+  var heroContent = document.getElementById('heroContent');
+  var heroBg = document.getElementById('heroBg');
+  var ticking = false;
 
   function onScroll() {
     var sy = window.scrollY;
     var wh = window.innerHeight;
-    if (heroTui) heroTui.style.transform = 'translateY(' + (sy * 0.10) + 'px)';
-    if (heroContent) heroContent.style.transform = 'translateY(' + (sy * 0.20) + 'px)';
-    if (heroBg) heroBg.style.transform = 'translateY(' + (sy * 0.04) + 'px)';
-    document.querySelectorAll('.parallax-item').forEach(function(el) {
-      var speed = parseFloat(el.getAttribute('data-p')) || 20;
+    var docH = document.documentElement.scrollHeight - wh;
+    var progress = docH > 0 ? sy / docH : 0;
+
+    // Scroll progress bar
+    if (scrollProgress) scrollProgress.style.transform = 'scaleX(' + progress + ')';
+
+    // Nav shadow
+    if (nav) {
+      if (sy > 10) nav.classList.add('scrolled');
+      else nav.classList.remove('scrolled');
+    }
+
+    // Hero parallax (only when hero is in view)
+    if (sy < wh * 1.5) {
+      if (heroTui) heroTui.style.transform = 'translateY(' + (sy * 0.08) + 'px)';
+      if (heroContent) heroContent.style.transform = 'translateY(' + (sy * 0.15) + 'px)';
+      if (heroBg) heroBg.style.transform = 'translateY(' + (sy * 0.03) + 'px)';
+    }
+
+    // Parallax items
+    document.querySelectorAll('[data-parallax]').forEach(function(el) {
+      var speed = parseFloat(el.getAttribute('data-parallax')) || 20;
       var rect = el.getBoundingClientRect();
       var center = (rect.top + rect.height / 2 - wh / 2) / wh;
       el.style.transform = 'translateY(' + (center * speed) + 'px)';
     });
+
     ticking = false;
   }
 
   window.addEventListener('scroll', function() {
     if (!ticking) { requestAnimationFrame(onScroll); ticking = true; }
-  });
+  }, { passive: true });
+
+  // Initial call
+  onScroll();
 })();
 </script>
 </body>
