@@ -20,8 +20,7 @@ export function getNextSku(companyIdOverride?: number): string {
   }
 
   let candidate = String(maxNum + 1);
-  const existing = new Set(rows.map(r => r.sku));
-  while (existing.has(candidate)) {
+  while (getProductBySku(candidate, companyId)) {
     maxNum++;
     candidate = String(maxNum + 1);
   }
