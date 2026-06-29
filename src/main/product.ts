@@ -6,13 +6,27 @@ export function getNextSku(companyIdOverride?: number): string {
   const companyId = companyIdOverride ?? getActiveCompanyId();
   if (!companyId) return '1';
 
-  const row = queryOne<{ max_sku: string | null }>(
-    `SELECT MAX(CAST(sku AS INTEGER)) as max_sku FROM products WHERE company_id = ? AND sku GLOB '[0-9]*'`,
+  const rows = queryAll<{ sku: string }>(
+    `SELECT sku FROM products WHERE company_id = ?`,
     [companyId]
   );
 
-  const maxNum = row?.max_sku ? parseInt(row.max_sku, 10) : 0;
-  return String(maxNum + 1);
+  let maxNum = 0;
+  for (const { sku } of rows) {
+    if (/^\d+$/.test(sku)) {
+      const n = parseInt(sku, 10);
+      if (n > maxNum) maxNum = n;
+    }
+  }
+
+  let candidate = String(maxNum + 1);
+  const existing = new Set(rows.map(r => r.sku));
+  while (existing.has(candidate)) {
+    maxNum++;
+    candidate = String(maxNum + 1);
+  }
+
+  return candidate;
 }
 
 export function getAllProducts(companyId?: number): Product[] {
