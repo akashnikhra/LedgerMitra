@@ -13,6 +13,16 @@ export default function PrintPreviewModal({ isOpen, onClose, template, id, ledge
   const [loading, setLoading] = useState(false);
   const previewRef = useRef<HTMLIFrameElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const [waModalOpen, setWaModalOpen] = useState(false);
+  const [waMessage, setWaMessage] = useState('');
+  const [waSending, setWaSending] = useState(false);
+  const [waError, setWaError] = useState('');
+  const [waSuccess, setWaSuccess] = useState(false);
+  const [waCustomerPhone, setWaCustomerPhone] = useState('');
+  const [waCustomerName, setWaCustomerName] = useState('');
+  const [waDocNo, setWaDocNo] = useState('');
+  const [waDocDate, setWaDocDate] = useState('');
+  const [waAmount, setWaAmount] = useState('');
 
   // Auto-focus Close button on mount
   useEffect(() => {
@@ -39,17 +49,6 @@ export default function PrintPreviewModal({ isOpen, onClose, template, id, ledge
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
   }, [onClose, waModalOpen, waSending]);
-
-  const [waModalOpen, setWaModalOpen] = useState(false);
-  const [waMessage, setWaMessage] = useState('');
-  const [waSending, setWaSending] = useState(false);
-  const [waError, setWaError] = useState('');
-  const [waSuccess, setWaSuccess] = useState(false);
-  const [waCustomerPhone, setWaCustomerPhone] = useState('');
-  const [waCustomerName, setWaCustomerName] = useState('');
-  const [waDocNo, setWaDocNo] = useState('');
-  const [waDocDate, setWaDocDate] = useState('');
-  const [waAmount, setWaAmount] = useState('');
 
   useEffect(() => {
     if (isOpen && template) loadPreview();
